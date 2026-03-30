@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contracts — TSI Sales Rep Portal</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", Inter, Arial, sans-serif;
+      font-size: 13px;
+      background: rgb(246, 247, 251);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      color: #000;
+    }
+
+    /* ── Sidebar ─────────────────────────────────────────────── */
+    .ps-sidebar {
+      width: 200px;
+      flex-shrink: 0;
+      background: rgb(255, 255, 255);
+      box-shadow: rgb(53, 67, 109) 0px 0px 15px -8px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    .ps-brand {
+      background: linear-gradient(135deg, rgb(17, 60, 139) 0%, rgb(53, 92, 175) 100%);
+      padding: 14px 14px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+
+    .ps-brand-logo {
+      height: 28px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .ps-brand-sub {
+      font-size: 9.5px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.75);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .ps-nav {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 8px 4px;
+    }
+
+    .ps-nav-section {
+      font-size: 9px;
+      font-weight: 700;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 10px 10px 4px;
+    }
+
+    .ps-nav-section:first-child {
+      padding-top: 4px;
+    }
+
+    .ps-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      width: 100%;
+      height: 33px;
+      font-size: 11.5px;
+      font-weight: 400;
+      color: #374151;
+      text-decoration: none;
+      border-radius: 5px;
+      margin-bottom: 1px;
+      padding: 0 10px;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+      border: none;
+      background: transparent;
+      text-align: left;
+    }
+
+    .ps-nav-item i {
+      font-size: 13px;
+      color: #6b7280;
+      flex-shrink: 0;
+      transition: color 0.12s;
+    }
+
+    .ps-nav-item:hover:not(.active) {
+      background: rgb(237, 242, 255);
+      color: rgb(17, 60, 139);
+    }
+
+    .ps-nav-item:hover:not(.active) i {
+      color: rgb(17, 60, 139);
+    }
+
+    .ps-nav-item.active {
+      background: rgb(224, 232, 255);
+      color: rgb(17, 60, 139);
+      font-weight: 600;
+      box-shadow: inset 3px 0 0 rgb(17, 60, 139);
+    }
+
+    .ps-nav-item.active i {
+      color: rgb(17, 60, 139);
+    }
+
+    .ps-nav-bottom {
+      padding: 6px 8px 12px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    /* ── Main Area ───────────────────────────────────────────── */
+    .ps-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Top Header ──────────────────────────────────────────── */
+    .ps-header {
+      height: 70px;
+      flex-shrink: 0;
+      background: linear-gradient(90deg, rgb(17, 60, 139), rgb(87, 118, 227));
+      border-bottom: 1px solid rgb(182, 200, 201);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+    }
+
+    .ps-header-left {
+      flex: 1;
+      color: #fff;
+    }
+
+    .ps-header-left h6 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 400;
+      color: #fff;
+    }
+
+    .ps-header-left h6 strong {
+      font-weight: 700;
+    }
+
+    .ps-header-center {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .ps-header-center img {
+      width: 230px;
+      object-fit: contain;
+    }
+
+    .ps-header-right {
+      flex: 1;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    /* ── Content Row ─────────────────────────────────────────── */
+    .ps-content {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      background: rgb(246, 247, 251);
+    }
+
+    /* ── List Panel ──────────────────────────────────────────── */
+    .ps-list-panel {
+      width: 400px;
+      flex-shrink: 0;
+      background: #fff;
+      border-right: 1px solid #dee2e6;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .ps-list-title {
+      padding: 12px 16px;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .ps-list-title h5 {
+      font-size: 18px;
+      font-weight: 700;
+      color: rgb(29, 55, 127);
+      margin: 0 0 2px;
+    }
+
+    .ps-list-title p {
+      font-size: 12px;
+      color: #6c757d;
+      margin: 0;
+    }
+
+    .ps-filter-bar {
+      padding: 10px 16px;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .ps-status-group {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .ps-status-btn {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 4px;
+      border: 1px solid #ced4da;
+      background: #fff;
+      color: #495057;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .ps-status-btn:hover:not(.active) {
+      background: #e9ecef;
+    }
+
+    .ps-status-btn.active {
+      background: linear-gradient(90deg, rgb(17, 60, 139), rgb(87, 118, 227));
+      color: #fff;
+      border-color: rgb(17, 60, 139);
+    }
+
+    .ps-search {
+      width: 100%;
+      margin-top: 6px;
+      font-size: 11px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      padding: 4px 8px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .ps-search:focus {
+      border-color: rgb(87, 118, 227);
+      box-shadow: 0 0 0 2px rgba(87, 118, 227, 0.15);
+    }
+
+    /* ── KPI Strip ───────────────────────────────────────────── */
+    .ps-kpi-strip {
+      padding: 10px 16px;
+      border-bottom: 1px solid #dee2e6;
+      background: #f8f9fa;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .ps-kpi-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ps-kpi-icon {
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .ps-kpi-icon.blue  { color: rgb(17, 60, 139); }
+    .ps-kpi-icon.green { color: #16a34a; }
+    .ps-kpi-icon.amber { color: #f59e0b; }
+    .ps-kpi-icon.navy  { color: rgb(53, 92, 165); }
+
+    .ps-kpi-data { display: flex; flex-direction: column; }
+
+    .ps-kpi-val {
+      font-size: 14px;
+      font-weight: 700;
+      color: #111;
+      line-height: 1.1;
+    }
+
+    .ps-kpi-lbl {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: #6c757d;
+      letter-spacing: 0.03em;
+    }
+
+    /* ── Contracts Table ─────────────────────────────────────── */
+    .ps-table-wrap {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .ps-table-wrap::-webkit-scrollbar { width: 6px; }
+    .ps-table-wrap::-webkit-scrollbar-track { background: #f1f1f1; }
+    .ps-table-wrap::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+
+    .ps-table {
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: collapse;
+      border: 1px solid rgb(92, 92, 92);
+      font-size: 11.5px;
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    .ps-table thead th {
+      background: rgb(143, 169, 217);
+      color: #fff;
+      font-weight: 700;
+      font-size: 11.5px;
+      padding: 5px 7px;
+      text-align: left;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      white-space: nowrap;
+    }
+
+    .ps-table thead th.right { text-align: right; }
+
+    .ps-table tbody tr {
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    .ps-table tbody tr:nth-child(even) {
+      background: rgb(223, 232, 237);
+    }
+
+    .ps-table tbody tr:hover {
+      background: #cfe2ff !important;
+    }
+
+    .ps-table tbody tr.selected {
+      background: #bbd6fb !important;
+      font-weight: 500;
+    }
+
+    .ps-table tbody td {
+      padding: 4px 7px;
+      font-size: 11.5px;
+      color: #000;
+      border-bottom: 1px solid #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ps-table tbody td.right { text-align: right; }
+
+    .ps-table tbody td.contract-num {
+      font-family: "Courier New", monospace;
+      font-size: 11px;
+      color: rgb(29, 55, 127);
+      font-weight: 600;
+    }
+
+    .ps-table tbody td.client-name {
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Status badge */
+    .ps-badge {
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-size: 10px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .ps-badge.active   { background: #d4edda; color: #155724; }
+    .ps-badge.expired  { background: #f8d7da; color: #721c24; }
+    .ps-badge.pending  { background: #e2e3e5; color: #383d41; }
+    .ps-badge.expiring { background: #fff3cd; color: #856404; }
+
+    /* Spinner row / empty row */
+    .ps-table-msg td {
+      text-align: center;
+      color: #6c757d;
+      padding: 24px 7px !important;
+      font-style: italic;
+    }
+
+    /* ── Detail Panel ────────────────────────────────────────── */
+    .ps-detail-panel {
+      flex: 1;
+      background: #fff;
+      overflow: hidden;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ps-detail-panel::-webkit-scrollbar { width: 6px; }
+    .ps-detail-panel::-webkit-scrollbar-track { background: #f1f1f1; }
+    .ps-detail-panel::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+
+    /* Empty state */
+    .ps-detail-empty {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: #6c757d;
+    }
+
+    .ps-detail-empty i {
+      font-size: 48px;
+      color: #adb5bd;
+    }
+
+    .ps-detail-empty p {
+      font-size: 14px;
+      margin: 0;
+    }
+
+    /* ── Contract detail redesign ───────────────────────────── */
+
+    /* Top identity band */
+    .ps-ctr-band {
+      padding: 14px 18px 12px;
+      border-bottom: 1px solid #e0e6ef;
+      background: #fff;
+    }
+    .ps-ctr-band-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: rgb(17, 60, 139);
+      margin: 0 0 6px;
+    }
+    .ps-ctr-band-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      font-size: 11.5px;
+      color: #555;
+    }
+    .ps-ctr-band-meta .sep { color: #ccc; }
+
+    /* 4-metric row */
+    .ps-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-bottom: 1px solid #e0e6ef;
+    }
+    .ps-metric {
+      padding: 12px 14px;
+      border-right: 1px solid #e0e6ef;
+      background: #f8faff;
+    }
+    .ps-metric:last-child { border-right: none; }
+    .ps-metric-val {
+      font-size: 16px;
+      font-weight: 700;
+      color: rgb(17, 60, 139);
+      line-height: 1.1;
+    }
+    .ps-metric-lbl {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: #6c757d;
+      letter-spacing: 0.04em;
+      margin-top: 3px;
+    }
+    .ps-metric-val.green { color: #16a34a; }
+    .ps-metric-val.amber { color: #b45309; }
+    .ps-metric-val.red   { color: #b71234; }
+
+    /* Section heading (lightweight) */
+    .ps-sh {
+      padding: 10px 18px 6px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #6c757d;
+      border-bottom: 1px solid #e0e6ef;
+      background: #f8faff;
+    }
+
+    /* Consumption bar */
+    .ps-consume {
+      padding: 12px 18px;
+      background: #fff;
+      border-bottom: 1px solid #e0e6ef;
+    }
+    .ps-consume-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: #555;
+      margin-bottom: 6px;
+    }
+    .ps-consume-meta strong { color: #111; }
+    .ps-bar-track {
+      height: 10px;
+      background: #e9ecef;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .ps-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, rgb(17,60,139), rgb(87,118,227));
+      border-radius: 5px;
+      transition: width 0.4s;
+      min-width: 2px;
+    }
+    .ps-consume-note {
+      margin-top: 5px;
+      font-size: 10.5px;
+      color: #6c757d;
+    }
+
+    /* Coverage row */
+    .ps-coverage {
+      padding: 10px 18px;
+      background: #fff;
+      border-bottom: 1px solid #e0e6ef;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+    .ps-scope-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+    .ps-scope-pill.flex  { background: #d1fae5; color: #065f46; }
+    .ps-scope-pill.rigid { background: #dbeafe; color: #1e3a8a; }
+    .ps-scope-pill.cam   { background: #ede9fe; color: #4c1d95; }
+    .ps-scope-pill.inst  { background: #f3f4f6; color: #374151; }
+    .ps-dept-tag {
+      font-size: 11px;
+      color: #555;
+      padding: 3px 10px;
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+
+    /* Repair table */
+    .ps-repair-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid rgb(92, 92, 92);
+      font-size: 11.5px;
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    .ps-repair-table thead th {
+      background: rgb(143, 169, 217);
+      color: #fff;
+      font-weight: 700;
+      font-size: 11.5px;
+      padding: 5px 7px;
+      text-align: left;
+    }
+
+    .ps-repair-table thead th.right { text-align: right; }
+
+    .ps-repair-table tbody tr:nth-child(even) {
+      background: rgb(223, 232, 237);
+    }
+
+    .ps-repair-table tbody tr:hover {
+      background: #cfe2ff;
+    }
+
+    .ps-repair-table tbody td {
+      padding: 4px 7px;
+      font-size: 11.5px;
+      color: #000;
+      border-bottom: 1px solid #fff;
+    }
+
+    .ps-repair-table tbody td.right {
+      text-align: right;
+    }
+
+    .ps-repair-table td.wo-num {
+      font-family: "Courier New", monospace;
+      font-size: 11px;
+      color: rgb(0, 0, 255);
+      cursor: pointer;
+    }
+
+    .ps-repair-table td.wo-num:hover {
+      text-decoration: underline;
+    }
+
+    /* Repair outcome chips */
+    .ps-outcome { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+    .ps-pf-pass {
+      display: inline-flex; align-items: center; gap: 3px;
+      background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a;
+      font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 9999px;
+    }
+    .ps-pf-fail {
+      display: inline-flex; align-items: center; gap: 3px;
+      background: #fef2f2; border: 1px solid #fecaca; color: #b71234;
+      font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 9999px;
+    }
+    .ps-flag-chip {
+      display: inline-flex; align-items: center; gap: 3px;
+      background: #fffbeb; border: 1px solid #fde68a; color: #92400e;
+      font-size: 9px; font-weight: 600; padding: 1px 6px; border-radius: 9999px;
+    }
+    .ps-tat {
+      font-size: 10.5px; color: #6b7280; white-space: nowrap;
+    }
+    .ps-root-cause {
+      font-size: 10.5px; color: #374151; font-style: italic;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    /* Spinner */
+    .spinner-sm {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #dee2e6;
+      border-top-color: rgb(87, 118, 227);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Empty table state */
+    .ps-table-empty td {
+      text-align: center;
+      color: #6c757d;
+      padding: 18px 7px !important;
+      font-style: italic;
+      font-size: 11.5px;
+    }
+
+    /* Section divider */
+    .ps-section + .ps-section {
+      border-top: 1px solid #dee2e6;
+    }
+
+    /* Detail loading overlay */
+    .ps-detail-loading {
+      padding: 40px 16px;
+      text-align: center;
+      color: #6c757d;
+    }
+
+    /* ── Detail Tabs ─────────────────────────────────────────── */
+    .ps-dtab-bar {
+      display: flex;
+      border-bottom: 2px solid #e5e7eb;
+      padding: 0 18px;
+      background: #fff;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+    .ps-dtab {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: #6b7280;
+      padding: 8px 14px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      white-space: nowrap;
+      transition: color 0.12s;
+    }
+    .ps-dtab:hover { color: rgb(17,60,139); }
+    .ps-dtab.active {
+      color: rgb(17,60,139);
+      border-bottom-color: rgb(17,60,139);
+      font-weight: 600;
+    }
+    .ps-dtab-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #e5e7eb;
+      color: #374151;
+      font-size: 9px;
+      font-weight: 700;
+      min-width: 16px;
+      height: 16px;
+      border-radius: 9999px;
+      padding: 0 4px;
+      margin-left: 5px;
+    }
+    .ps-dtab.active .ps-dtab-badge {
+      background: rgb(17,60,139);
+      color: #fff;
+    }
+    .ps-dtab-pane { display: none; padding: 14px 18px; overflow-y: auto; flex: 1; }
+    .ps-dtab-pane.active { display: block; }
+
+    /* ── Equipment tab ───────────────────────────────────────── */
+    .ps-eq-group { margin-bottom: 16px; }
+    .ps-eq-group-label {
+      font-size: 9.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #6b7280;
+      padding: 0 0 5px;
+      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 6px;
+    }
+    .ps-eq-table { width: 100%; border-collapse: collapse; font-size: 11.5px; table-layout: fixed; }
+    .ps-eq-table th {
+      background: #f3f4f6;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #6b7280;
+      padding: 5px 8px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .ps-eq-table td {
+      padding: 5px 8px;
+      border-bottom: 1px solid #f3f4f6;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #111;
+    }
+    .ps-eq-table tr:last-child td { border-bottom: none; }
+    .ps-eq-table .repairs-badge {
+      display: inline-flex;
+      align-items: center;
+      background: #fef2f2;
+      color: #b71234;
+      border: 1px solid #fecaca;
+      border-radius: 9999px;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 6px;
+    }
+    .ps-eq-table .no-repairs { color: #9ca3af; font-size: 11px; }
+
+    /* ── Reasons tab ─────────────────────────────────────────── */
+    .ps-reason-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 0;
+      border-bottom: 1px solid #f3f4f6;
+      font-size: 11.5px;
+    }
+    .ps-reason-row:last-child { border-bottom: none; }
+    .ps-reason-label {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #111827;
+    }
+    .ps-reason-bar-wrap {
+      width: 120px;
+      flex-shrink: 0;
+      background: #f3f4f6;
+      border-radius: 4px;
+      height: 6px;
+      overflow: hidden;
+    }
+    .ps-reason-bar-fill {
+      height: 100%;
+      background: rgb(17, 60, 139);
+      border-radius: 4px;
+    }
+    .ps-reason-count {
+      width: 28px;
+      text-align: right;
+      font-weight: 700;
+      color: rgb(17,60,139);
+      font-size: 11.5px;
+      flex-shrink: 0;
+    }
+    .ps-reason-charges {
+      width: 65px;
+      text-align: right;
+      color: #6b7280;
+      font-size: 10.5px;
+      flex-shrink: 0;
+    }
+
+    /* ── Documents tab ───────────────────────────────────────── */
+    .ps-doc-stub {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      text-align: center;
+      gap: 10px;
+    }
+    .ps-doc-stub i { font-size: 36px; color: #d1d5db; }
+    .ps-doc-stub h6 { font-size: 13px; font-weight: 600; color: #374151; margin: 0; }
+    .ps-doc-stub p { font-size: 11.5px; color: #9ca3af; margin: 0; max-width: 260px; }
+  </style>
+</head>
+<body>
+
+  <!-- ══ Sidebar ════════════════════════════════════════════════ -->
+  <aside class="ps-sidebar">
+    <div class="ps-brand">
+      <img class="ps-brand-logo" src="assets/logo-white.png" alt="TSI">
+      <span class="ps-brand-sub">Sales Rep Portal</span>
+    </div>
+
+    <nav class="ps-nav" id="psNav">
+      <div class="ps-nav-section">Repairs</div>
+      <a class="ps-nav-item" href="#"><i class="bi bi-wrench-adjustable"></i> Open Repair List</a>
+      <a class="ps-nav-item" href="#"><i class="bi bi-check2-all"></i> Closed Repair List</a>
+
+      <div class="ps-nav-section">Orders</div>
+      <a class="ps-nav-item" href="#"><i class="bi bi-cart3"></i> Product Sales</a>
+      <a class="ps-nav-item" href="#"><i class="bi bi-geo-alt"></i> Site Services</a>
+      <a class="ps-nav-item" href="#"><i class="bi bi-box-seam"></i> Outstanding Loaners</a>
+      <a class="ps-nav-item" href="#"><i class="bi bi-box-arrow-in-right"></i> Send Product In</a>
+
+      <div class="ps-nav-section">Accounts</div>
+      <a class="ps-nav-item" href="#"><i class="bi bi-hospital"></i> Client List</a>
+      <a class="ps-nav-item" href="#"><i class="bi bi-receipt"></i> Receivables</a>
+      <a class="ps-nav-item" href="#"><i class="bi bi-bar-chart-line"></i> Sales Reports</a>
+      <a class="ps-nav-item active" href="#"><i class="bi bi-file-earmark-text"></i> Contracts</a>
+    </nav>
+
+    <div class="ps-nav-bottom">
+      <a class="ps-nav-item" href="#"><i class="bi bi-lock"></i> Change Password</a>
+      <a class="ps-nav-item" href="#"><i class="bi bi-power"></i> Sign Out</a>
+    </div>
+  </aside>
+
+  <!-- ══ Main ═══════════════════════════════════════════════════ -->
+  <div class="ps-main">
+
+    <!-- Header -->
+    <header class="ps-header">
+      <div class="ps-header-left">
+        <h6>Welcome, <strong>Debbie</strong></h6>
+      </div>
+      <div class="ps-header-center">
+        <img src="assets/logo-white.png" alt="TSI">
+      </div>
+      <div class="ps-header-right"></div>
+    </header>
+
+    <!-- Content -->
+    <div class="ps-content">
+
+      <!-- ── List Panel ──────────────────────────────────────── -->
+      <div class="ps-list-panel">
+
+        <!-- Title -->
+        <div class="ps-list-title">
+          <h5>Contracts</h5>
+          <p>Service agreements</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="ps-filter-bar">
+          <div class="ps-status-group" id="statusGroup">
+            <button class="ps-status-btn active" data-status="">All</button>
+            <button class="ps-status-btn" data-status="Active">Active</button>
+            <button class="ps-status-btn" data-status="Expiring">Expiring</button>
+            <button class="ps-status-btn" data-status="Expired">Expired</button>
+          </div>
+          <input class="ps-search" id="searchInput" type="text" placeholder="Search client or contract #…">
+        </div>
+
+        <!-- KPI Strip -->
+        <div class="ps-kpi-strip" id="kpiStrip">
+          <div class="ps-kpi-chip">
+            <i class="bi bi-check-circle ps-kpi-icon blue"></i>
+            <div class="ps-kpi-data">
+              <span class="ps-kpi-val" id="kpiActive">—</span>
+              <span class="ps-kpi-lbl">Active</span>
+            </div>
+          </div>
+          <div class="ps-kpi-chip">
+            <i class="bi bi-cash-stack ps-kpi-icon green"></i>
+            <div class="ps-kpi-data">
+              <span class="ps-kpi-val" id="kpiRevenue">—</span>
+              <span class="ps-kpi-lbl">Monthly Revenue</span>
+            </div>
+          </div>
+          <div class="ps-kpi-chip">
+            <i class="bi bi-exclamation-triangle ps-kpi-icon amber"></i>
+            <div class="ps-kpi-data">
+              <span class="ps-kpi-val" id="kpiExpiring">—</span>
+              <span class="ps-kpi-lbl">Expiring ≤90d</span>
+            </div>
+          </div>
+          <div class="ps-kpi-chip">
+            <i class="bi bi-tools ps-kpi-icon navy"></i>
+            <div class="ps-kpi-data">
+              <span class="ps-kpi-val" id="kpiScopes">—</span>
+              <span class="ps-kpi-lbl">Scopes</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="ps-table-wrap">
+          <table class="ps-table" id="contractTable">
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th style="width:52px">Status</th>
+                <th style="width:84px">Expires</th>
+                <th class="right" style="width:64px">Monthly</th>
+              </tr>
+            </thead>
+            <tbody id="contractTbody">
+              <tr class="ps-table-msg">
+                <td colspan="6"><span class="spinner-sm"></span> Loading contracts…</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div><!-- /list panel -->
+
+      <!-- ── Detail Panel ────────────────────────────────────── -->
+      <div class="ps-detail-panel" id="detailPanel">
+        <div class="ps-detail-empty" id="detailEmpty">
+          <i class="bi bi-file-earmark-text"></i>
+          <p>Select a contract to view details</p>
+        </div>
+        <div id="detailContent" style="display:none"></div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+
+<script>
+  /* ── Helpers ──────────────────────────────────────────────── */
+  function getBase() {
+    const h = location.hostname;
+    if (h === 'localhost' || h === '127.0.0.1') return 'http://localhost:4000/api';
+    return '/api';
+  }
+
+  function exportEquipmentCSV() {
+    const scopes = window._portalScopes || [];
+    const contract = window._portalContract || {};
+    if (!scopes.length) return;
+    const typeLabel = s => s.sRigidOrFlexible === 'F' ? 'Flexible' : s.sRigidOrFlexible === 'R' ? 'Rigid' : s.sRigidOrFlexible === 'C' ? 'Camera' : 'Instrument';
+    const esc = v => `"${(v||'').toString().replace(/"/g,'""')}"`;
+    const rows = [
+      ['Contract #', 'Client', 'Department', 'Serial #', 'Make', 'Model', 'Type', 'Repair Count'].join(','),
+      ...scopes.map(s => [
+        esc(contract.sContractNumber || ''),
+        esc(contract.sClientName1 || ''),
+        esc(s.sDeptName || 'Unassigned'),
+        esc(s.sSerialNumber || ''),
+        esc((s.sManufacturer || '').trim()),
+        esc(s.sScopeTypeDesc || ''),
+        esc(typeLabel(s)),
+        s.nRepairCount || 0
+      ].join(','))
+    ];
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `equipment-${(contract.sContractNumber||'contract').replace(/[^a-z0-9]/gi,'-')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function fmtMoney(n) {
+    if (n == null || n === '' || isNaN(Number(n))) return '—';
+    return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function fmtDate(d) {
+    if (!d) return '—';
+    const dt = new Date(d);
+    if (isNaN(dt)) return '—';
+    return (dt.getMonth() + 1).toString().padStart(2, '0') + '/' +
+           dt.getDate().toString().padStart(2, '0') + '/' +
+           dt.getFullYear();
+  }
+
+  function monthlyFee(contract) {
+    const eff  = new Date(contract.dtDateEffective);
+    const term = new Date(contract.dtDateTermination);
+    const months = (term.getFullYear() - eff.getFullYear()) * 12 + (term.getMonth() - eff.getMonth());
+    if (!months || months <= 0 || !contract.dblAmtContract) return 0;
+    return contract.dblAmtContract / months;
+  }
+
+  function contractStatus(contract) {
+    // Prefer the server-computed status (already correct)
+    if (contract.sContractStatus) return contract.sContractStatus;
+    const now  = new Date();
+    const term = new Date(contract.dtDateTermination);
+    const eff  = new Date(contract.dtDateEffective);
+    if (term < now) return 'Expired';
+    const daysLeft = (term - now) / 86400000;
+    if (daysLeft <= 90) return 'Expiring';
+    if (eff > now) return 'Pending';
+    return 'Active';
+  }
+
+  function badgeHtml(status) {
+    const cls = status.toLowerCase();
+    return `<span class="ps-badge ${cls}">${status}</span>`;
+  }
+
+  function typeLabel(t) {
+    const map = { 1: 'Capitated', 2: 'Shared Risk', 3: 'PSA', 4: 'Fuse', 5: 'Airway', 6: 'Rental' };
+    return map[t] || (t ? String(t) : '—');
+  }
+
+  /* ── State ────────────────────────────────────────────────── */
+  let allContracts = [];
+  let activeStatus = '';
+  let selectedKey = null;
+
+  /* ── KPI Compute ─────────────────────────────────────────── */
+  function computeKpis(contracts) {
+    let active = 0, revenue = 0, expiring = 0, scopes = 0;
+    contracts.forEach(c => {
+      const s = contractStatus(c);
+      if (s === 'Active')   { active++; revenue += monthlyFee(c); }
+      if (s === 'Expiring') { expiring++; revenue += monthlyFee(c); }
+      scopes += (c.nScopeCount || c.scopeCount || 0);
+    });
+    document.getElementById('kpiActive').textContent   = active;
+    document.getElementById('kpiRevenue').textContent  = revenue ? '$' + Math.round(revenue / 1000) + 'K' : '—';
+    document.getElementById('kpiExpiring').textContent = expiring;
+    document.getElementById('kpiScopes').textContent   = scopes || '—';
+  }
+
+  /* ── Render KPIs from API ────────────────────────────────── */
+  function renderKpis(kpis) {
+    document.getElementById('kpiActive').textContent   = kpis.activeCount ?? '—';
+    document.getElementById('kpiRevenue').textContent  = kpis.monthlyRevenue
+      ? '$' + Math.round(kpis.monthlyRevenue / 1000) + 'K' : '—';
+    document.getElementById('kpiExpiring').textContent = kpis.expiringCount ?? '—';
+    document.getElementById('kpiScopes').textContent   = kpis.totalScopes ?? '—';
+  }
+
+  /* ── Render Table ─────────────────────────────────────────── */
+  function renderTable(contracts) {
+    const search   = document.getElementById('searchInput').value.toLowerCase();
+    const filtered = contracts.filter(c => {
+      const matchStatus = !activeStatus || contractStatus(c) === activeStatus;
+      const matchSearch = !search ||
+        (c.sClientName1 || '').toLowerCase().includes(search) ||
+        (c.sContractNumber || '').toLowerCase().includes(search);
+      return matchStatus && matchSearch;
+    });
+
+    const tbody = document.getElementById('contractTbody');
+
+    if (!filtered.length) {
+      tbody.innerHTML = `<tr class="ps-table-msg"><td colspan="6">No contracts found</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(c => {
+      const status = contractStatus(c);
+      const fee    = monthlyFee(c);
+      const sel    = c.lContractKey === selectedKey ? ' selected' : '';
+      return `<tr class="${sel}" data-key="${c.lContractKey}" onclick="selectContract(${c.lContractKey})">
+        <td class="client-name" title="${c.sClientName1 || ''}">${c.sClientName1 || '—'}</td>
+        <td>${badgeHtml(status)}</td>
+        <td>${fmtDate(c.dtDateTermination)}</td>
+        <td class="right">${fee ? fmtMoney(fee) : '—'}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  /* ── Load Contracts ───────────────────────────────────────── */
+  async function loadContracts() {
+    try {
+      const res  = await fetch(`${getBase()}/portal/contracts?salesRepKey=236`);
+      const data = await res.json();
+      allContracts = (data.contracts || data.data || data || []);
+      if (data.kpis) {
+        renderKpis(data.kpis);
+      } else {
+        computeKpis(allContracts);
+      }
+      renderTable(allContracts);
+    } catch (err) {
+      // Fallback demo data when API is unavailable
+      allContracts = DEMO_CONTRACTS;
+      computeKpis(allContracts);
+      renderTable(allContracts);
+    }
+  }
+
+  /* ── Select Contract ──────────────────────────────────────── */
+  async function selectContract(key) {
+    selectedKey = key;
+
+    // Update row highlight
+    document.querySelectorAll('#contractTbody tr').forEach(r => {
+      r.classList.toggle('selected', parseInt(r.dataset.key) === key);
+    });
+
+    // Show loading in detail panel
+    document.getElementById('detailEmpty').style.display = 'none';
+    const detailContent = document.getElementById('detailContent');
+    detailContent.style.cssText = 'display:flex;flex-direction:column;height:100%;overflow:hidden;';
+    detailContent.innerHTML =
+      `<div class="ps-detail-loading"><span class="spinner-sm"></span> Loading contract details…</div>`;
+
+    const contract = allContracts.find(c => c.lContractKey === key);
+    if (!contract) return;
+
+    try {
+      const res    = await fetch(`${getBase()}/portal/contracts/${key}/detail`);
+      const detail = await res.json();
+      renderDetail(contract, detail);
+    } catch (err) {
+      // Fallback: render contract info only, use demo detail
+      const demo = DEMO_DETAILS[key] || { departments: [], repairs: [] };
+      renderDetail(contract, demo);
+    }
+  }
+
+  /* ── Render Detail ────────────────────────────────────────── */
+  function renderDetail(contract, detail) {
+    const status  = contractStatus(contract);
+    const fee     = monthlyFee(contract);
+    const depts   = detail.departments || [];
+    const repairs = detail.repairs     || [];
+    const scopes  = detail.scopes      || [];
+    const reasons = detail.reasons     || [];
+
+    // Scope summary counts — from detail.coverage (server-computed)
+    const cov = detail.coverage || {};
+    const scopeCounts = {
+      F: cov.flexible   || 0,
+      R: cov.rigid      || 0,
+      C: cov.camera     || 0,
+      I: cov.instrument || 0
+    };
+
+    const totalValue   = contract.dblAmtContract || 0;
+    const totalCharges = repairs.reduce((s, r) => s + (r.dblAmtRepair || 0), 0);
+    const pct          = totalValue > 0 ? Math.min(100, Math.round(totalCharges / totalValue * 100)) : 0;
+    const daysLeft     = Math.max(0, Math.round((new Date(contract.dtDateTermination) - new Date()) / 86400000));
+    const totalScopes  = scopeCounts.F + scopeCounts.R + scopeCounts.C + scopeCounts.I;
+
+    // Avoidable rate: category 2 = user-induced damage; category 1 = wear/failure
+    const diagnosedRepairs = repairs.filter(r => r.nReasonCategory === 1 || r.nReasonCategory === 2);
+    const avoidableRepairs = diagnosedRepairs.filter(r => r.nReasonCategory === 2);
+    const avoidablePct     = diagnosedRepairs.length > 0
+      ? Math.round(avoidableRepairs.length / diagnosedRepairs.length * 100)
+      : null;
+    const avoidableColor   = avoidablePct === null ? '' : avoidablePct >= 50 ? ' amber' : avoidablePct <= 25 ? ' green' : '';
+
+    // Coverage dept tags
+    const deptNames = depts.map(d => d.sDepartmentName).filter(Boolean);
+    const coverageDeptsHtml = deptNames.length
+      ? deptNames.map(n => `<span class="ps-dept-tag"><i class="bi bi-hospital"></i> ${n}</span>`).join('')
+      : '<span style="color:#aaa;font-size:11px">No departments on file</span>';
+
+    const pillsHtml = [
+      scopeCounts.F ? `<span class="ps-scope-pill flex"><i class="bi bi-activity"></i>Flexible: ${scopeCounts.F}</span>` : '',
+      scopeCounts.R ? `<span class="ps-scope-pill rigid"><i class="bi bi-camera-video"></i>Rigid: ${scopeCounts.R}</span>` : '',
+      scopeCounts.C ? `<span class="ps-scope-pill cam"><i class="bi bi-camera"></i>Camera: ${scopeCounts.C}</span>` : '',
+      scopeCounts.I ? `<span class="ps-scope-pill inst"><i class="bi bi-tools"></i>Instrument: ${scopeCounts.I}</span>` : '',
+    ].filter(Boolean).join('') || '<span style="color:#6c757d;font-size:12px;font-style:italic">No scope breakdown available</span>';
+
+    // Tab bar
+    const tabBarHtml = `
+<div class="ps-dtab-bar" id="dtabBar">
+  <button class="ps-dtab active" data-tab="overview">Overview</button>
+  <button class="ps-dtab" data-tab="equipment">Equipment <span class="ps-dtab-badge">${scopes.length}</span></button>
+  <button class="ps-dtab" data-tab="reasons">Why It Breaks <span class="ps-dtab-badge">${reasons.length}</span></button>
+  <button class="ps-dtab" data-tab="documents">Documents</button>
+</div>`;
+
+    // ── Overview tab ────────────────────────────────────────────
+    function calcTAT(r) {
+      const closeDate = r.dtShipDate || r.dtDateOut;
+      if (!closeDate || !r.dtDateIn) return null;
+      const days = Math.round((new Date(closeDate) - new Date(r.dtDateIn)) / 86400000);
+      return days >= 0 ? days : null;
+    }
+    function pfChip(pf) {
+      if (!pf) return '';
+      if (pf === 'P') return `<span class="ps-pf-pass"><i class="bi bi-check-circle-fill"></i> Pass</span>`;
+      if (pf === 'F') return `<span class="ps-pf-fail"><i class="bi bi-x-circle-fill"></i> Fail</span>`;
+      return '';
+    }
+
+    function categoryChip(cat) {
+      if (cat === 2) return `<span style="display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:9999px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;white-space:nowrap"><i class="bi bi-exclamation-triangle-fill" style="font-size:8px"></i> Avoidable</span>`;
+      if (cat === 1) return `<span style="display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:9999px;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;white-space:nowrap">Wear &amp; Tear</span>`;
+      return `<span style="color:#d1d5db">—</span>`;
+    }
+
+    const recentRepairs = repairs.slice(0, 8);
+    const overviewRepairsHtml = recentRepairs.length
+      ? `<table class="ps-repair-table" style="margin:0;table-layout:fixed;width:100%">
+          <thead><tr>
+            <th style="width:8%">WO #</th>
+            <th style="width:7%">Date</th>
+            <th style="width:11%">Scope</th>
+            <th style="width:18%">Customer Complaint</th>
+            <th>Root Cause</th>
+            <th style="width:10%">Category</th>
+            <th style="width:5%;text-align:center">TAT</th>
+            <th style="width:9%">Outcome</th>
+          </tr></thead>
+          <tbody>
+            ${recentRepairs.map(r => {
+              const tat  = calcTAT(r);
+              const tatHtml = tat !== null
+                ? `<span class="ps-tat">${tat}d</span>`
+                : `<span class="ps-tat" style="color:#d1d5db">—</span>`;
+              const outcomeHtml = `<div class="ps-outcome">
+                ${pfChip(r.sInsFinalPF)}
+                ${r.bReplaced   ? `<span class="ps-flag-chip"><i class="bi bi-arrow-repeat"></i> Repl</span>` : ''}
+                ${r.bOutsourced ? `<span class="ps-flag-chip"><i class="bi bi-box-arrow-up-right"></i> Vend</span>` : ''}
+              </div>`;
+              return `<tr>
+                <td style="font-family:monospace;font-size:10.5px;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.sWorkOrderNumber || '—'}</td>
+                <td style="color:#6b7280">${fmtDate(r.dtDateIn)}</td>
+                <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.sScopeTypeDesc||''}">
+                  <span style="font-weight:600;color:rgb(17,60,139)">${r.sScopeTypeDesc || '—'}</span>
+                  ${r.sSerialNumber ? `<br><span style="font-size:10px;color:#9ca3af">${r.sSerialNumber}</span>` : ''}
+                </td>
+                <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+                    title="${r.sComplaintDesc||''}">${r.sComplaintDesc || '—'}</td>
+                <td class="ps-root-cause" title="${r.sRepairReason||''}">${r.sRepairReason || '<span style="color:#d1d5db">—</span>'}</td>
+                <td>${categoryChip(r.nReasonCategory)}</td>
+                <td style="text-align:center">${tatHtml}</td>
+                <td>${outcomeHtml}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>`
+      : `<div style="padding:16px 0;color:#6c757d;font-size:12px;font-style:italic">No repairs on record for this contract.</div>`;
+
+    const overviewHtml = `
+      <div class="ps-sh" style="margin:0 -18px;padding:10px 18px 6px">Consumption</div>
+      <div class="ps-consume" style="margin:0 -18px">
+        <div class="ps-consume-meta">
+          <span><strong>${fmtMoney(totalCharges)}</strong> charged under contract</span>
+          <span>${pct}% of ${fmtMoney(totalValue)}</span>
+        </div>
+        <div class="ps-bar-track">
+          <div class="ps-bar-fill" style="width:${pct}%"></div>
+        </div>
+        <div class="ps-consume-note">${repairs.length} repair${repairs.length !== 1 ? 's' : ''} processed
+          ${contract.sPurchaseOrder ? ' · PO: ' + contract.sPurchaseOrder : ''}
+          · Billed to: ${contract.sBillEmail || 'not on file'}</div>
+      </div>
+      <div class="ps-sh" style="margin:12px -18px 0;padding:10px 18px 6px">What's Covered</div>
+      <div class="ps-coverage" style="margin:0 -18px">
+        ${pillsHtml}
+        ${deptNames.length ? '<span class="sep" style="color:#ddd">|</span>' + coverageDeptsHtml : ''}
+      </div>
+      <div class="ps-sh" style="margin:12px -18px 0;padding:10px 18px 6px">Recent Repairs — Root Cause &amp; Outcome</div>
+      <div style="margin:8px -18px 0;overflow-x:auto">${overviewRepairsHtml}</div>`;
+
+    // ── Equipment tab ────────────────────────────────────────────
+    // Store scopes on window so the export button can reach them
+    window._portalScopes = scopes;
+    window._portalContract = contract;
+
+    let equipmentHtml;
+    if (!scopes.length) {
+      equipmentHtml = `<div style="text-align:center;padding:40px 0;color:#9ca3af;font-size:12px;font-style:italic">No equipment on file for this contract.</div>`;
+    } else {
+      const byDept = {};
+      scopes.forEach(s => {
+        const key = s.sDeptName || 'Unassigned';
+        if (!byDept[key]) byDept[key] = [];
+        byDept[key].push(s);
+      });
+      const tablesByDept = Object.entries(byDept).map(([deptName, items]) => `
+        <div class="ps-eq-group">
+          <div class="ps-eq-group-label">${deptName}</div>
+          <table class="ps-eq-table">
+            <thead><tr>
+              <th style="width:120px">Serial #</th>
+              <th style="width:100px">Make</th>
+              <th>Model</th>
+              <th style="width:80px">Type</th>
+              <th style="width:70px;text-align:right">Repairs</th>
+            </tr></thead>
+            <tbody>
+              ${items.map(s => `<tr>
+                <td>${s.sSerialNumber || '—'}</td>
+                <td>${s.sManufacturer?.trim() || '—'}</td>
+                <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.sScopeTypeDesc || '—'}</td>
+                <td>${s.sRigidOrFlexible === 'F' ? 'Flexible' : s.sRigidOrFlexible === 'R' ? 'Rigid' : s.sRigidOrFlexible === 'C' ? 'Camera' : 'Instrument'}</td>
+                <td style="text-align:right">${s.nRepairCount > 0
+                  ? `<span class="repairs-badge">${s.nRepairCount}</span>`
+                  : `<span class="no-repairs">—</span>`}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`).join('');
+
+      equipmentHtml = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:11px;color:#6b7280">${scopes.length} scope${scopes.length !== 1 ? 's' : ''} under this agreement</span>
+          <button onclick="exportEquipmentCSV()" style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;font-size:11px;font-weight:600;background:#f0f9ff;border:1px solid #bae6fd;color:#0369a1;border-radius:5px;cursor:pointer">
+            <i class="bi bi-download"></i> Export CSV
+          </button>
+        </div>
+        ${tablesByDept}`;
+    }
+
+    // ── Reasons tab ──────────────────────────────────────────────
+    let reasonsHtml;
+    if (!reasons.length) {
+      reasonsHtml = `<div style="text-align:center;padding:40px 0;color:#9ca3af;font-size:12px;font-style:italic">No repair history on file.</div>`;
+    } else {
+      // Avoidable vs Wear split summary from reasons array
+      const reasonsAvoidable = reasons.filter(r => r.nReasonCategory === 2);
+      const reasonsWear      = reasons.filter(r => r.nReasonCategory === 1);
+      const nAvoid = reasonsAvoidable.reduce((s, r) => s + r.nCount, 0);
+      const nWear  = reasonsWear.reduce((s, r) => s + r.nCount, 0);
+      const nTotal = nAvoid + nWear;
+      const avoidPct = nTotal > 0 ? Math.round(nAvoid / nTotal * 100) : 0;
+      const wearPct  = nTotal > 0 ? Math.round(nWear  / nTotal * 100) : 0;
+
+      const splitHtml = nTotal > 0 ? `
+        <div style="display:flex;gap:10px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #f3f4f6">
+          <div style="flex:1;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px">
+            <div style="font-size:22px;font-weight:800;color:#92400e">${avoidPct}%</div>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#92400e">Avoidable</div>
+            <div style="font-size:10.5px;color:#6b7280;margin-top:2px">${nAvoid} repairs — user-induced damage</div>
+          </div>
+          <div style="flex:1;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px">
+            <div style="font-size:22px;font-weight:800;color:#15803d">${wearPct}%</div>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#15803d">Wear &amp; Failure</div>
+            <div style="font-size:10.5px;color:#6b7280;margin-top:2px">${nWear} repairs — component/normal wear</div>
+          </div>
+        </div>` : '';
+
+      const maxCount = reasons[0]?.nCount || 1;
+      const reasonRowsHtml = reasons.map(r => {
+        const isAvoidable = r.nReasonCategory === 2;
+        const barColor = isAvoidable ? '#f59e0b' : '#2563eb';
+        const labelStyle = isAvoidable ? 'color:#92400e;font-weight:500' : 'color:#111827';
+        return `
+        <div class="ps-reason-row">
+          <div class="ps-reason-label" style="${labelStyle}" title="${r.sReason||''}">${r.sReason || '—'}${isAvoidable ? ' <span style="font-size:9px;color:#f59e0b">⚠</span>' : ''}</div>
+          <div class="ps-reason-bar-wrap">
+            <div class="ps-reason-bar-fill" style="width:${Math.round((r.nCount / maxCount) * 100)}%;background:${barColor}"></div>
+          </div>
+          <div class="ps-reason-count">${r.nCount}</div>
+          <div class="ps-reason-charges">${r.dblCharges ? fmtMoney(r.dblCharges) : ''}</div>
+        </div>`;
+      }).join('');
+
+      reasonsHtml = splitHtml + reasonRowsHtml;
+    }
+
+    // ── Documents tab ────────────────────────────────────────────
+    const documentsHtml = `
+      <div class="ps-doc-stub">
+        <i class="bi bi-file-earmark-pdf"></i>
+        <h6>Signed Agreement &amp; Documents</h6>
+        <p>Document access is coming soon. Your signed service agreement and related files will be available here for download.</p>
+      </div>`;
+
+    // ── Assemble ─────────────────────────────────────────────────
+    const detailContent = document.getElementById('detailContent');
+    detailContent.innerHTML = `
+      <!-- Identity band -->
+      <div class="ps-ctr-band" style="flex-shrink:0">
+        <div class="ps-ctr-band-title">${contract.sClientName1 || contract.sContractName || '—'}</div>
+        <div class="ps-ctr-band-meta">
+          ${badgeHtml(status)}
+          <span class="sep">|</span>
+          <span>${contract.sContractTypeName || typeLabel(contract.nContractType) || 'Service Agreement'}</span>
+          <span class="sep">|</span>
+          <span>${fmtDate(contract.dtDateEffective)} – ${fmtDate(contract.dtDateTermination)}</span>
+          ${contract.sPurchaseOrder ? `<span class="sep">|</span><span>PO: ${contract.sPurchaseOrder}</span>` : ''}
+          ${contract.sPaymentTerms  ? `<span class="sep">|</span><span>${contract.sPaymentTerms}</span>` : ''}
+        </div>
+      </div>
+
+      <!-- 4 key metrics -->
+      <div class="ps-metrics" style="flex-shrink:0">
+        <div class="ps-metric">
+          <div class="ps-metric-val">${fee ? fmtMoney(fee) : '—'}</div>
+          <div class="ps-metric-lbl">Monthly Fee</div>
+        </div>
+        <div class="ps-metric">
+          <div class="ps-metric-val">${totalValue ? fmtMoney(totalValue) : '—'}</div>
+          <div class="ps-metric-lbl">Contract Value</div>
+        </div>
+        <div class="ps-metric">
+          <div class="ps-metric-val${daysLeft <= 90 ? ' amber' : ''}">${daysLeft}d</div>
+          <div class="ps-metric-lbl">Days Remaining</div>
+        </div>
+        <div class="ps-metric">
+          <div class="ps-metric-val">${totalScopes || '—'}</div>
+          <div class="ps-metric-lbl">Scopes Covered</div>
+        </div>
+        <div class="ps-metric">
+          <div class="ps-metric-val${avoidableColor}">${avoidablePct !== null ? avoidablePct + '%' : '—'}</div>
+          <div class="ps-metric-lbl">Avoidable Rate</div>
+        </div>
+      </div>
+
+      ${tabBarHtml}
+
+      <div class="ps-dtab-pane active" data-tab="overview">${overviewHtml}</div>
+      <div class="ps-dtab-pane" data-tab="equipment">${equipmentHtml}</div>
+      <div class="ps-dtab-pane" data-tab="reasons">${reasonsHtml}</div>
+      <div class="ps-dtab-pane" data-tab="documents">${documentsHtml}</div>
+    `;
+
+    // Attach tab click handler
+    document.getElementById('dtabBar').addEventListener('click', e => {
+      const btn = e.target.closest('.ps-dtab');
+      if (!btn) return;
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('.ps-dtab').forEach(b => b.classList.toggle('active', b === btn));
+      document.querySelectorAll('.ps-dtab-pane').forEach(p => p.classList.toggle('active', p.dataset.tab === tab));
+    });
+  }
+
+  function rStatusNormalize(s) {
+    if (!s) return 'Pending';
+    const lc = s.toLowerCase();
+    if (lc.includes('complete') || lc.includes('closed') || lc.includes('done')) return 'Active';
+    if (lc.includes('cancel')) return 'Expired';
+    if (lc.includes('hold') || lc.includes('pending') || lc.includes('wait')) return 'Pending';
+    return 'Active';
+  }
+
+  /* ── Status Filter Buttons ────────────────────────────────── */
+  document.getElementById('statusGroup').addEventListener('click', e => {
+    const btn = e.target.closest('.ps-status-btn');
+    if (!btn) return;
+    document.querySelectorAll('.ps-status-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeStatus = btn.dataset.status;
+    renderTable(allContracts);
+  });
+
+  /* ── Search ───────────────────────────────────────────────── */
+  document.getElementById('searchInput').addEventListener('input', () => {
+    renderTable(allContracts);
+  });
+
+  /* ── Demo Fallback Data ───────────────────────────────────── */
+  const DEMO_CONTRACTS = [
+    {
+      lContractKey: 1, sContractNumber: 'NC-2024-001', sClientName1: 'Mercy General Hospital',
+      sContractName: 'Mercy General — Capitated Agreement',
+      nContractType: 1, dtDateEffective: '2024-01-01', dtDateTermination: '2026-06-30',
+      dblAmtContract: 84000, bActive: true, sPurchaseOrder: 'PO-44821', sPaymentTerms: 'Net 30',
+      sSalesRepName: 'Debbie Horner', sEmailInvoice: 'ap@mercygeneral.org',
+      nScopeCount: 42, nFlexible: 28, nRigid: 10, nCamera: 4
+    },
+    {
+      lContractKey: 2, sContractNumber: 'NC-2024-008', sClientName1: 'St. Luke\'s Medical Center',
+      sContractName: 'St. Luke\'s — PSA',
+      nContractType: 3, dtDateEffective: '2024-03-01', dtDateTermination: '2025-02-28',
+      dblAmtContract: 36000, bActive: false, sPurchaseOrder: 'PO-90012', sPaymentTerms: 'Net 30',
+      sSalesRepName: 'Debbie Horner', sEmailInvoice: 'billing@stlukes.org',
+      nScopeCount: 18, nFlexible: 12, nRigid: 6
+    },
+    {
+      lContractKey: 3, sContractNumber: 'NC-2025-014', sClientName1: 'Valley View Surgery Center',
+      sContractName: 'Valley View — Shared Risk',
+      nContractType: 2, dtDateEffective: '2025-01-01', dtDateTermination: '2026-04-15',
+      dblAmtContract: 52800, bActive: true, sPurchaseOrder: '', sPaymentTerms: 'Net 45',
+      sSalesRepName: 'Debbie Horner', sEmailInvoice: 'valleyap@vvsc.com',
+      nScopeCount: 31, nFlexible: 18, nRigid: 9, nCamera: 4
+    },
+    {
+      lContractKey: 4, sContractNumber: 'NC-2025-022', sClientName1: 'Regional GI Associates',
+      sContractName: 'Regional GI — Capitated',
+      nContractType: 1, dtDateEffective: '2025-07-01', dtDateTermination: '2026-06-30',
+      dblAmtContract: 24000, bActive: true, sPurchaseOrder: 'PO-55043', sPaymentTerms: 'Net 30',
+      sSalesRepName: 'Debbie Horner', sEmailInvoice: 'ap@regionalgist.com',
+      nScopeCount: 14, nFlexible: 14
+    },
+    {
+      lContractKey: 5, sContractNumber: 'NC-2025-031', sClientName1: 'Northside ENT & Surgery',
+      sContractName: 'Northside ENT — Airway Bundle',
+      nContractType: 5, dtDateEffective: '2025-09-01', dtDateTermination: '2026-08-31',
+      dblAmtContract: 18000, bActive: true, sPurchaseOrder: 'PO-71120', sPaymentTerms: 'Net 30',
+      sSalesRepName: 'Debbie Horner', sEmailInvoice: 'finance@northsideent.com',
+      nScopeCount: 11, nRigid: 8, nCamera: 3
+    },
+    {
+      lContractKey: 6, sContractNumber: 'SC-2025-004', sClientName1: 'Vanderbilt University Medical',
+      sContractName: 'Vanderbilt — Capitated (South)',
+      nContractType: 1, dtDateEffective: '2025-04-01', dtDateTermination: '2026-12-31',
+      dblAmtContract: 108000, bActive: true, sPurchaseOrder: 'PO-VU-2025', sPaymentTerms: 'Net 30',
+      sSalesRepName: 'Debbie Horner', sEmailInvoice: 'vumc.ap@vumc.org',
+      nScopeCount: 67, nFlexible: 40, nRigid: 20, nCamera: 7
+    },
+    {
+      lContractKey: 7, sContractNumber: 'NC-2023-044', sClientName1: 'Pine Ridge Community Hospital',
+      sContractName: 'Pine Ridge — PSA (Expired)',
+      nContractType: 3, dtDateEffective: '2023-01-01', dtDateTermination: '2024-12-31',
+      dblAmtContract: 14400, bActive: false, sPurchaseOrder: '', sPaymentTerms: 'Net 30',
+      sSalesRepName: 'Debbie Horner', sEmailInvoice: '',
+      nScopeCount: 8, nFlexible: 8
+    },
+    {
+      lContractKey: 8, sContractNumber: 'NC-2026-003', sClientName1: 'Gateway Surgical Partners',
+      sContractName: 'Gateway Surgical — Fuse',
+      nContractType: 4, dtDateEffective: '2026-02-01', dtDateTermination: '2027-01-31',
+      dblAmtContract: 30000, bActive: true, sPurchaseOrder: 'PO-GSP-001', sPaymentTerms: 'Net 45',
+      sSalesRepName: 'Debbie Horner', sEmailInvoice: 'gsp.billing@gateway.com',
+      nScopeCount: 17, nFlexible: 10, nRigid: 4, nInstrument: 3
+    },
+  ];
+
+  const DEMO_DETAILS = {
+    1: {
+      departments: [
+        { sDepartmentName: 'Endoscopy — Main', dtDateEffective: '2024-01-01', dtDateTermination: '2026-06-30', sPurchaseOrder: 'PO-44821', nFlexible: 14, nRigid: 4, nCamera: 2 },
+        { sDepartmentName: 'GI Lab — 3rd Floor', dtDateEffective: '2024-01-01', dtDateTermination: '2026-06-30', sPurchaseOrder: 'PO-44822', nFlexible: 14, nRigid: 6, nCamera: 2 },
+      ],
+      repairs: [
+        { dtDateIn: '2026-03-10', sWorkOrder: 'NR-26-08821', sDepartmentName: 'Endoscopy — Main', sModelNumber: 'PCF-H190L', sRepairType: 'Bending Section', dblCharges: 0, sStatus: 'Complete' },
+        { dtDateIn: '2026-02-28', sWorkOrder: 'NR-26-08450', sDepartmentName: 'GI Lab — 3rd Floor', sModelNumber: 'GIF-H190', sRepairType: 'Leak Test / Repair', dblCharges: 0, sStatus: 'Complete' },
+        { dtDateIn: '2026-01-15', sWorkOrder: 'NR-26-07110', sDepartmentName: 'Endoscopy — Main', sModelNumber: 'CF-H190L', sRepairType: 'Channel Cleaning', dblCharges: 0, sStatus: 'Complete' },
+        { dtDateIn: '2025-12-02', sWorkOrder: 'NR-25-19843', sDepartmentName: 'GI Lab — 3rd Floor', sModelNumber: 'GIF-H185', sRepairType: 'Angulation Wire', dblCharges: 0, sStatus: 'Complete' },
+      ]
+    },
+    2: {
+      departments: [
+        { sDepartmentName: 'Surgery — OR Suite 1', dtDateEffective: '2024-03-01', dtDateTermination: '2025-02-28', sPurchaseOrder: 'PO-90012', nFlexible: 12, nRigid: 6 },
+      ],
+      repairs: [
+        { dtDateIn: '2024-11-20', sWorkOrder: 'NR-24-15001', sDepartmentName: 'Surgery — OR Suite 1', sModelNumber: 'BF-P190', sRepairType: 'Full Overhaul', dblCharges: 1850, sStatus: 'Complete' },
+        { dtDateIn: '2024-09-05', sWorkOrder: 'NR-24-12250', sDepartmentName: 'Surgery — OR Suite 1', sModelNumber: 'URF-V2', sRepairType: 'Light Guide Repair', dblCharges: 625, sStatus: 'Complete' },
+      ]
+    },
+    3: {
+      departments: [
+        { sDepartmentName: 'Ambulatory Surgery', dtDateEffective: '2025-01-01', dtDateTermination: '2026-04-15', sPurchaseOrder: '', nFlexible: 18, nRigid: 9, nCamera: 4 },
+      ],
+      repairs: [
+        { dtDateIn: '2026-03-18', sWorkOrder: 'NR-26-09002', sDepartmentName: 'Ambulatory Surgery', sModelNumber: 'GIF-HQ190', sRepairType: 'Biopsy Channel', dblCharges: 0, sStatus: 'In Progress' },
+        { dtDateIn: '2026-02-14', sWorkOrder: 'NR-26-08100', sDepartmentName: 'Ambulatory Surgery', sModelNumber: 'PCF-H190', sRepairType: 'Water Jet Cleaning', dblCharges: 0, sStatus: 'Complete' },
+      ]
+    },
+    4: {
+      departments: [
+        { sDepartmentName: 'GI Practice Main', dtDateEffective: '2025-07-01', dtDateTermination: '2026-06-30', sPurchaseOrder: 'PO-55043', nFlexible: 14 },
+      ],
+      repairs: [
+        { dtDateIn: '2026-03-05', sWorkOrder: 'NR-26-08700', sDepartmentName: 'GI Practice Main', sModelNumber: 'GIF-XTQ160', sRepairType: 'Distal Cap', dblCharges: 0, sStatus: 'Complete' },
+      ]
+    },
+    5: {
+      departments: [
+        { sDepartmentName: 'ENT — Clinic A', dtDateEffective: '2025-09-01', dtDateTermination: '2026-08-31', sPurchaseOrder: 'PO-71120', nRigid: 8, nCamera: 3 },
+      ],
+      repairs: []
+    },
+    6: {
+      departments: [
+        { sDepartmentName: 'Vanderbilt Endo — North', dtDateEffective: '2025-04-01', dtDateTermination: '2026-12-31', sPurchaseOrder: 'PO-VU-2025', nFlexible: 22, nRigid: 10, nCamera: 4 },
+        { sDepartmentName: 'Vanderbilt Endo — South', dtDateEffective: '2025-04-01', dtDateTermination: '2026-12-31', sPurchaseOrder: 'PO-VU-2025', nFlexible: 18, nRigid: 10, nCamera: 3 },
+      ],
+      repairs: [
+        { dtDateIn: '2026-03-20', sWorkOrder: 'SR-26-04411', sDepartmentName: 'Vanderbilt Endo — North', sModelNumber: 'GIF-H290T', sRepairType: 'Full Overhaul', dblCharges: 0, sStatus: 'In Progress' },
+        { dtDateIn: '2026-03-10', sWorkOrder: 'SR-26-04300', sDepartmentName: 'Vanderbilt Endo — South', sModelNumber: 'CF-HQ190L', sRepairType: 'Bending Section', dblCharges: 0, sStatus: 'Complete' },
+        { dtDateIn: '2026-02-22', sWorkOrder: 'SR-26-04100', sDepartmentName: 'Vanderbilt Endo — North', sModelNumber: 'PCF-H290Z', sRepairType: 'Leak Test', dblCharges: 0, sStatus: 'Complete' },
+      ]
+    },
+    7: {
+      departments: [
+        { sDepartmentName: 'Endoscopy Unit', dtDateEffective: '2023-01-01', dtDateTermination: '2024-12-31', sPurchaseOrder: '', nFlexible: 8 },
+      ],
+      repairs: [
+        { dtDateIn: '2024-08-14', sWorkOrder: 'NR-24-11001', sDepartmentName: 'Endoscopy Unit', sModelNumber: 'GIF-Q165', sRepairType: 'Channel Repair', dblCharges: 0, sStatus: 'Complete' },
+      ]
+    },
+    8: {
+      departments: [
+        { sDepartmentName: 'OR — Main Campus', dtDateEffective: '2026-02-01', dtDateTermination: '2027-01-31', sPurchaseOrder: 'PO-GSP-001', nFlexible: 10, nRigid: 4, nInstrument: 3 },
+      ],
+      repairs: []
+    },
+  };
+
+  /* ── Init ─────────────────────────────────────────────────── */
+  loadContracts();
+</script>
+</body>
+</html>

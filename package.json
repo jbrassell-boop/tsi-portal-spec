@@ -1,0 +1,15 @@
+{
+  "name": "tsi-portal-spec",
+  "version": "1.0.0",
+  "description": "TSI Sales Rep Portal — Contracts screen mockup and spec for BrightLogix",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "server": "node server/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mssql": "^10.0.1",
+    "msnodesqlv8": "^4.1.2"
+  }
+}
