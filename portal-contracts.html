@@ -511,9 +511,8 @@
 
     /* Consumption bar */
     .ps-consume {
-      padding: 12px 18px;
+      padding: 0;
       background: #fff;
-      border-bottom: 1px solid #e0e6ef;
     }
     .ps-consume-meta {
       display: flex;
@@ -544,9 +543,8 @@
 
     /* Coverage row */
     .ps-coverage {
-      padding: 10px 18px;
+      padding: 0;
       background: #fff;
-      border-bottom: 1px solid #e0e6ef;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
@@ -732,23 +730,65 @@
       background: rgb(17,60,139);
       color: #fff;
     }
-    .ps-dtab-pane { display: none; padding: 14px 18px; overflow-y: auto; flex: 1; min-height: 0; }
+    .ps-dtab-pane { display: none; padding: 14px 18px; overflow-y: auto; flex: 1; min-height: 0; background: #f0f2f8; }
     .ps-dtab-pane.active { display: block; }
+
+    /* ── Section Card (reusable card wrapper for tab content) ── */
+    .ps-card {
+      background: #fff;
+      border: 1px solid #d0d8e8;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .ps-card-head {
+      padding: 8px 14px;
+      background: linear-gradient(180deg, #edf1f9 0%, #e4e9f4 100%);
+      border-bottom: 1px solid #d0d8e8;
+      border-radius: 8px 8px 0 0;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: rgb(17, 60, 139);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ps-card-head i { font-size: 12px; }
+    .ps-card-body { padding: 12px 14px; }
 
     /* ── Repairs & Insights tab ─────────────────────────────── */
     .ps-repair-summary {
       display: flex;
-      gap: 10px;
-      margin-bottom: 14px;
+      gap: 0;
+      margin-bottom: 12px;
+      border: 1px solid #d0d8e8;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     }
     .ps-repair-stat {
       flex: 1;
-      background: #f8faff;
-      border: 1px solid #e0e6ef;
-      border-radius: 8px;
-      padding: 10px 14px;
+      background: linear-gradient(180deg, #fff 0%, #f4f7fc 100%);
+      padding: 12px 14px;
       text-align: center;
+      border-right: 1px solid #d0d8e8;
+      position: relative;
     }
+    .ps-repair-stat:last-child { border-right: none; }
+    .ps-repair-stat::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+    .ps-repair-stat:nth-child(1)::before { background: rgb(17, 60, 139); }
+    .ps-repair-stat:nth-child(2)::before { background: #f59e0b; }
+    .ps-repair-stat:nth-child(3)::before { background: #16a34a; }
+    .ps-repair-stat:nth-child(4)::before { background: #6366f1; }
     .ps-repair-stat-val {
       font-size: 22px;
       font-weight: 800;
@@ -759,7 +799,7 @@
     .ps-repair-stat-val.green { color: #15803d; }
     .ps-repair-stat-val.red   { color: #b71234; }
     .ps-repair-stat-lbl {
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -770,9 +810,10 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 0;
-      margin-bottom: 6px;
-      border-bottom: 1px solid #f3f4f6;
+      padding: 8px 14px;
+      background: linear-gradient(180deg, #edf1f9 0%, #e4e9f4 100%);
+      border-bottom: 1px solid #d0d8e8;
+      border-radius: 8px 8px 0 0;
       flex-wrap: wrap;
     }
     .ps-repair-filter-btn {
@@ -780,13 +821,13 @@
       font-weight: 600;
       padding: 3px 10px;
       border-radius: 4px;
-      border: 1px solid #ced4da;
+      border: 1px solid #b8c4d8;
       background: #fff;
       color: #495057;
       cursor: pointer;
       transition: background 0.12s, color 0.12s;
     }
-    .ps-repair-filter-btn:hover:not(.active) { background: #e9ecef; }
+    .ps-repair-filter-btn:hover:not(.active) { background: #dce3f0; }
     .ps-repair-filter-btn.active {
       background: rgb(17, 60, 139);
       color: #fff;
@@ -797,12 +838,13 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: #9ca3af;
+      color: rgb(17, 60, 139);
     }
     .ps-repair-count-note {
       font-size: 10.5px;
-      color: #9ca3af;
+      color: #6b7280;
       margin-left: auto;
+      font-weight: 600;
     }
 
     /* ── Equipment tab ───────────────────────────────────────── */
@@ -1355,23 +1397,29 @@
       : `<div style="padding:16px 0;color:#6c757d;font-size:12px;font-style:italic">No repairs on record for this contract.</div>`;
 
     const overviewHtml = `
-      <div class="ps-sh" style="margin:0 -18px;padding:10px 18px 6px">Consumption</div>
-      <div class="ps-consume" style="margin:0 -18px">
-        <div class="ps-consume-meta">
-          <span><strong>${fmtMoney(totalCharges)}</strong> charged under contract</span>
-          <span>${pct}% of ${fmtMoney(totalValue)}</span>
+      <div class="ps-card">
+        <div class="ps-card-head"><i class="bi bi-bar-chart-line"></i> Consumption</div>
+        <div class="ps-card-body">
+          <div class="ps-consume-meta">
+            <span><strong>${fmtMoney(totalCharges)}</strong> charged under contract</span>
+            <span>${pct}% of ${fmtMoney(totalValue)}</span>
+          </div>
+          <div class="ps-bar-track">
+            <div class="ps-bar-fill" style="width:${pct}%"></div>
+          </div>
+          <div class="ps-consume-note">${repairs.length} repair${repairs.length !== 1 ? 's' : ''} processed
+            ${contract.sPurchaseOrder ? ' · PO: ' + contract.sPurchaseOrder : ''}
+            · Billed to: ${contract.sBillEmail || 'not on file'}</div>
         </div>
-        <div class="ps-bar-track">
-          <div class="ps-bar-fill" style="width:${pct}%"></div>
-        </div>
-        <div class="ps-consume-note">${repairs.length} repair${repairs.length !== 1 ? 's' : ''} processed
-          ${contract.sPurchaseOrder ? ' · PO: ' + contract.sPurchaseOrder : ''}
-          · Billed to: ${contract.sBillEmail || 'not on file'}</div>
       </div>
-      <div class="ps-sh" style="margin:12px -18px 0;padding:10px 18px 6px">What's Covered</div>
-      <div class="ps-coverage" style="margin:0 -18px">
-        ${pillsHtml}
-        ${deptNames.length ? '<span class="sep" style="color:#ddd">|</span>' + coverageDeptsHtml : ''}
+      <div class="ps-card">
+        <div class="ps-card-head"><i class="bi bi-shield-check"></i> What's Covered</div>
+        <div class="ps-card-body">
+          <div class="ps-coverage">
+            ${pillsHtml}
+            ${deptNames.length ? '<span class="sep" style="color:#ddd">|</span>' + coverageDeptsHtml : ''}
+          </div>
+        </div>
       </div>`;
 
     // ── Equipment tab ────────────────────────────────────────────
@@ -1415,13 +1463,18 @@
         </div>`).join('');
 
       equipmentHtml = `
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <span style="font-size:11px;color:#6b7280">${scopes.length} scope${scopes.length !== 1 ? 's' : ''} under this agreement</span>
-          <button onclick="exportEquipmentCSV()" style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;font-size:11px;font-weight:600;background:#f0f9ff;border:1px solid #bae6fd;color:#0369a1;border-radius:5px;cursor:pointer">
-            <i class="bi bi-download"></i> Export CSV
-          </button>
-        </div>
-        ${tablesByDept}`;
+        <div class="ps-card">
+          <div class="ps-card-head">
+            <i class="bi bi-tools"></i> Equipment
+            <span style="margin-left:auto;font-size:10px;font-weight:500;color:#6b7280;text-transform:none;letter-spacing:0">${scopes.length} scope${scopes.length !== 1 ? 's' : ''}</span>
+            <button onclick="exportEquipmentCSV()" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;font-size:10px;font-weight:600;background:#fff;border:1px solid #b8c4d8;color:#0369a1;border-radius:4px;cursor:pointer;margin-left:6px">
+              <i class="bi bi-download"></i> CSV
+            </button>
+          </div>
+          <div class="ps-card-body" style="padding:10px 14px">
+            ${tablesByDept}
+          </div>
+        </div>`;
     }
 
     // ── Repairs & Insights tab ─────────────────────────────────
@@ -1500,18 +1553,22 @@
         }).join('');
 
         insightsHtml = `
-          <div class="ps-sh" style="margin:0 -18px;padding:8px 18px 6px">Root Cause Breakdown</div>
-          <div style="padding:12px 0">
-            ${splitHtml}
-            ${reasonRowsHtml}
+          <div class="ps-card">
+            <div class="ps-card-head"><i class="bi bi-pie-chart"></i> Root Cause Breakdown</div>
+            <div class="ps-card-body">
+              ${splitHtml}
+              ${reasonRowsHtml}
+            </div>
           </div>`;
       }
 
-      // Filter bar + repair table
+      // Filter bar + repair table — wrapped in a card
       const filterBarHtml = repairs.length > 0 ? `
-        <div class="ps-sh" style="margin:0 -18px;padding:8px 18px 6px">Repair History</div>
+        <div class="ps-card" style="overflow:hidden">
         <div class="ps-repair-filter-bar" id="repairFilterBar">
-          <span class="ps-repair-filter-lbl">Show:</span>
+          <i class="bi bi-wrench-adjustable" style="font-size:12px;color:rgb(17,60,139)"></i>
+          <span class="ps-repair-filter-lbl">Repair History</span>
+          <span style="width:1px;height:16px;background:#b8c4d8"></span>
           <button class="ps-repair-filter-btn active" data-cat="all">All</button>
           <button class="ps-repair-filter-btn" data-cat="2">Avoidable</button>
           <button class="ps-repair-filter-btn" data-cat="1">Wear &amp; Tear</button>
@@ -1519,8 +1576,8 @@
         </div>` : '';
 
       const repairTableHtml = repairs.length > 0 ? `
-        <div style="margin:0 -18px;overflow-x:auto">
-          <table class="ps-repair-table" style="margin:0;table-layout:fixed;width:100%" id="repairTable">
+        <div style="overflow-x:auto">
+          <table class="ps-repair-table" style="margin:0;table-layout:fixed;width:100%;border:none" id="repairTable">
             <thead><tr>
               <th style="width:8%">WO #</th>
               <th style="width:7%">Date</th>
@@ -1559,6 +1616,7 @@
               }).join('')}
             </tbody>
           </table>
+        </div>
         </div>` : '';
 
       repairsInsightsHtml = summaryHtml + insightsHtml + filterBarHtml + repairTableHtml;
