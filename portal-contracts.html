@@ -1328,7 +1328,8 @@
     const tabBarHtml = `
 <div class="ps-dtab-bar" id="dtabBar">
   <button class="ps-dtab active" data-tab="overview">Overview</button>
-  <button class="ps-dtab" data-tab="repairs">Repairs &amp; Insights <span class="ps-dtab-badge">${repairs.length}</span></button>
+  <button class="ps-dtab" data-tab="insights">Insights <span class="ps-dtab-badge">${reasons.length}</span></button>
+  <button class="ps-dtab" data-tab="history">Repair History <span class="ps-dtab-badge">${repairs.length}</span></button>
   <button class="ps-dtab" data-tab="equipment">Equipment <span class="ps-dtab-badge">${scopes.length}</span></button>
   <button class="ps-dtab" data-tab="documents">Documents</button>
 </div>`;
@@ -1507,9 +1508,10 @@
     }
 
     // ── Repairs & Insights tab ─────────────────────────────────
-    let repairsInsightsHtml;
+    let insightsTabHtml, historyTabHtml;
     if (!repairs.length && !reasons.length) {
-      repairsInsightsHtml = `<div style="text-align:center;padding:40px 0;color:#9ca3af;font-size:12px;font-style:italic">No repair history on file for this contract.</div>`;
+      insightsTabHtml = `<div style="text-align:center;padding:40px 0;color:#9ca3af;font-size:12px;font-style:italic">No repair data on file for this contract.</div>`;
+      historyTabHtml = `<div style="text-align:center;padding:40px 0;color:#9ca3af;font-size:12px;font-style:italic">No repair history on file for this contract.</div>`;
     } else {
       // Summary strip: Total Repairs | Avoidable Rate | Avg TAT
       const avgTAT = (() => {
@@ -1648,7 +1650,8 @@
         </div>
         </div>` : '';
 
-      repairsInsightsHtml = summaryHtml + insightsHtml + filterBarHtml + repairTableHtml;
+      insightsTabHtml = summaryHtml + insightsHtml;
+      historyTabHtml = filterBarHtml + repairTableHtml;
     }
 
     // ── Documents tab ────────────────────────────────────────────
@@ -1703,7 +1706,8 @@
       ${tabBarHtml}
 
       <div class="ps-dtab-pane active" data-tab="overview">${overviewHtml}</div>
-      <div class="ps-dtab-pane" data-tab="repairs">${repairsInsightsHtml}</div>
+      <div class="ps-dtab-pane" data-tab="insights">${insightsTabHtml}</div>
+      <div class="ps-dtab-pane" data-tab="history">${historyTabHtml}</div>
       <div class="ps-dtab-pane" data-tab="equipment">${equipmentHtml}</div>
       <div class="ps-dtab-pane" data-tab="documents">${documentsHtml}</div>
     `;
