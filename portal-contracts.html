@@ -1298,7 +1298,7 @@
     };
 
     const totalValue   = contract.dblAmtContract || 0;
-    const totalCharges = repairs.reduce((s, r) => s + (r.dblAmtRepair || 0), 0);
+    const totalCharges = repairs.reduce((s, r) => s + (r.nStickerCost || r.dblAmtRepair || 0), 0);
     const pct          = totalValue > 0 ? Math.min(100, Math.round(totalCharges / totalValue * 100)) : 0;
     const daysLeft     = Math.max(0, Math.round((new Date(contract.dtDateTermination) - new Date()) / 86400000));
     const totalScopes  = scopeCounts.F + scopeCounts.R + scopeCounts.C + scopeCounts.I;
