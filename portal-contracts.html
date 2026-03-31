@@ -732,8 +732,78 @@
       background: rgb(17,60,139);
       color: #fff;
     }
-    .ps-dtab-pane { display: none; padding: 14px 18px; overflow-y: auto; flex: 1; }
+    .ps-dtab-pane { display: none; padding: 14px 18px; overflow-y: auto; flex: 1; min-height: 0; }
     .ps-dtab-pane.active { display: block; }
+
+    /* ── Repairs & Insights tab ─────────────────────────────── */
+    .ps-repair-summary {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .ps-repair-stat {
+      flex: 1;
+      background: #f8faff;
+      border: 1px solid #e0e6ef;
+      border-radius: 8px;
+      padding: 10px 14px;
+      text-align: center;
+    }
+    .ps-repair-stat-val {
+      font-size: 22px;
+      font-weight: 800;
+      color: rgb(17, 60, 139);
+      line-height: 1.1;
+    }
+    .ps-repair-stat-val.amber { color: #b45309; }
+    .ps-repair-stat-val.green { color: #15803d; }
+    .ps-repair-stat-val.red   { color: #b71234; }
+    .ps-repair-stat-lbl {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #6b7280;
+      margin-top: 3px;
+    }
+    .ps-repair-filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      margin-bottom: 6px;
+      border-bottom: 1px solid #f3f4f6;
+      flex-wrap: wrap;
+    }
+    .ps-repair-filter-btn {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 4px;
+      border: 1px solid #ced4da;
+      background: #fff;
+      color: #495057;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+    }
+    .ps-repair-filter-btn:hover:not(.active) { background: #e9ecef; }
+    .ps-repair-filter-btn.active {
+      background: rgb(17, 60, 139);
+      color: #fff;
+      border-color: rgb(17, 60, 139);
+    }
+    .ps-repair-filter-lbl {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #9ca3af;
+    }
+    .ps-repair-count-note {
+      font-size: 10.5px;
+      color: #9ca3af;
+      margin-left: auto;
+    }
 
     /* ── Equipment tab ───────────────────────────────────────── */
     .ps-eq-group { margin-bottom: 16px; }
@@ -1149,7 +1219,7 @@
     // Show loading in detail panel
     document.getElementById('detailEmpty').style.display = 'none';
     const detailContent = document.getElementById('detailContent');
-    detailContent.style.cssText = 'display:flex;flex-direction:column;height:100%;overflow:hidden;';
+    detailContent.style.cssText = 'display:flex;flex-direction:column;flex:1;min-height:0;';
     detailContent.innerHTML =
       `<div class="ps-detail-loading"><span class="spinner-sm"></span> Loading contract details…</div>`;
 
@@ -1216,8 +1286,8 @@
     const tabBarHtml = `
 <div class="ps-dtab-bar" id="dtabBar">
   <button class="ps-dtab active" data-tab="overview">Overview</button>
+  <button class="ps-dtab" data-tab="repairs">Repairs &amp; Insights <span class="ps-dtab-badge">${repairs.length}</span></button>
   <button class="ps-dtab" data-tab="equipment">Equipment <span class="ps-dtab-badge">${scopes.length}</span></button>
-  <button class="ps-dtab" data-tab="reasons">Why It Breaks <span class="ps-dtab-badge">${reasons.length}</span></button>
   <button class="ps-dtab" data-tab="documents">Documents</button>
 </div>`;
 
@@ -1302,9 +1372,7 @@
       <div class="ps-coverage" style="margin:0 -18px">
         ${pillsHtml}
         ${deptNames.length ? '<span class="sep" style="color:#ddd">|</span>' + coverageDeptsHtml : ''}
-      </div>
-      <div class="ps-sh" style="margin:12px -18px 0;padding:10px 18px 6px">Recent Repairs — Root Cause &amp; Outcome</div>
-      <div style="margin:8px -18px 0;overflow-x:auto">${overviewRepairsHtml}</div>`;
+      </div>`;
 
     // ── Equipment tab ────────────────────────────────────────────
     // Store scopes on window so the export button can reach them
@@ -1356,51 +1424,144 @@
         ${tablesByDept}`;
     }
 
-    // ── Reasons tab ──────────────────────────────────────────────
-    let reasonsHtml;
-    if (!reasons.length) {
-      reasonsHtml = `<div style="text-align:center;padding:40px 0;color:#9ca3af;font-size:12px;font-style:italic">No repair history on file.</div>`;
+    // ── Repairs & Insights tab ─────────────────────────────────
+    let repairsInsightsHtml;
+    if (!repairs.length && !reasons.length) {
+      repairsInsightsHtml = `<div style="text-align:center;padding:40px 0;color:#9ca3af;font-size:12px;font-style:italic">No repair history on file for this contract.</div>`;
     } else {
-      // Avoidable vs Wear split summary from reasons array
-      const reasonsAvoidable = reasons.filter(r => r.nReasonCategory === 2);
-      const reasonsWear      = reasons.filter(r => r.nReasonCategory === 1);
-      const nAvoid = reasonsAvoidable.reduce((s, r) => s + r.nCount, 0);
-      const nWear  = reasonsWear.reduce((s, r) => s + r.nCount, 0);
-      const nTotal = nAvoid + nWear;
-      const avoidPct = nTotal > 0 ? Math.round(nAvoid / nTotal * 100) : 0;
-      const wearPct  = nTotal > 0 ? Math.round(nWear  / nTotal * 100) : 0;
+      // Summary strip: Total Repairs | Avoidable Rate | Avg TAT
+      const avgTAT = (() => {
+        const tats = repairs.map(calcTAT).filter(t => t !== null);
+        if (!tats.length) return null;
+        return Math.round(tats.reduce((a, b) => a + b, 0) / tats.length * 10) / 10;
+      })();
+      const avoidColor = avoidablePct === null ? '' : avoidablePct >= 50 ? ' amber' : avoidablePct <= 25 ? ' green' : '';
+      const tatColor = avgTAT === null ? '' : avgTAT <= 5 ? ' green' : avgTAT >= 10 ? ' red' : '';
 
-      const splitHtml = nTotal > 0 ? `
-        <div style="display:flex;gap:10px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #f3f4f6">
-          <div style="flex:1;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px">
-            <div style="font-size:22px;font-weight:800;color:#92400e">${avoidPct}%</div>
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#92400e">Avoidable</div>
-            <div style="font-size:10.5px;color:#6b7280;margin-top:2px">${nAvoid} repairs — user-induced damage</div>
+      const summaryHtml = `
+        <div class="ps-repair-summary">
+          <div class="ps-repair-stat">
+            <div class="ps-repair-stat-val">${repairs.length}</div>
+            <div class="ps-repair-stat-lbl">Total Repairs</div>
           </div>
-          <div style="flex:1;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px">
-            <div style="font-size:22px;font-weight:800;color:#15803d">${wearPct}%</div>
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#15803d">Wear &amp; Failure</div>
-            <div style="font-size:10.5px;color:#6b7280;margin-top:2px">${nWear} repairs — component/normal wear</div>
+          <div class="ps-repair-stat">
+            <div class="ps-repair-stat-val${avoidColor}">${avoidablePct !== null ? avoidablePct + '%' : '—'}</div>
+            <div class="ps-repair-stat-lbl">Avoidable Rate</div>
           </div>
+          <div class="ps-repair-stat">
+            <div class="ps-repair-stat-val${tatColor}">${avgTAT !== null ? avgTAT + 'd' : '—'}</div>
+            <div class="ps-repair-stat-lbl">Avg Turnaround</div>
+          </div>
+          <div class="ps-repair-stat">
+            <div class="ps-repair-stat-val">${fmtMoney(totalCharges)}</div>
+            <div class="ps-repair-stat-lbl">Total Charges</div>
+          </div>
+        </div>`;
+
+      // Avoidable vs Wear split + reason bars (from old "Why It Breaks")
+      let insightsHtml = '';
+      if (reasons.length) {
+        const reasonsAvoidable = reasons.filter(r => r.nReasonCategory === 2);
+        const reasonsWear      = reasons.filter(r => r.nReasonCategory === 1);
+        const nAvoid = reasonsAvoidable.reduce((s, r) => s + r.nCount, 0);
+        const nWear  = reasonsWear.reduce((s, r) => s + r.nCount, 0);
+        const nTotal = nAvoid + nWear;
+        const avoidPct = nTotal > 0 ? Math.round(nAvoid / nTotal * 100) : 0;
+        const wearPct  = nTotal > 0 ? Math.round(nWear  / nTotal * 100) : 0;
+
+        const splitHtml = nTotal > 0 ? `
+          <div style="display:flex;gap:10px;margin-bottom:14px">
+            <div style="flex:1;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px">
+              <div style="font-size:20px;font-weight:800;color:#92400e">${avoidPct}%</div>
+              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#92400e">Avoidable</div>
+              <div style="font-size:10px;color:#6b7280;margin-top:2px">${nAvoid} repairs — user-induced</div>
+            </div>
+            <div style="flex:1;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px">
+              <div style="font-size:20px;font-weight:800;color:#15803d">${wearPct}%</div>
+              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#15803d">Wear &amp; Failure</div>
+              <div style="font-size:10px;color:#6b7280;margin-top:2px">${nWear} repairs — component wear</div>
+            </div>
+          </div>` : '';
+
+        const maxCount = reasons[0]?.nCount || 1;
+        const reasonRowsHtml = reasons.slice(0, 8).map(r => {
+          const isAvoidable = r.nReasonCategory === 2;
+          const barColor = isAvoidable ? '#f59e0b' : '#2563eb';
+          const labelStyle = isAvoidable ? 'color:#92400e;font-weight:500' : 'color:#111827';
+          return `
+          <div class="ps-reason-row">
+            <div class="ps-reason-label" style="${labelStyle}" title="${r.sReason||''}">${r.sReason || '—'}${isAvoidable ? ' <span style="font-size:9px;color:#f59e0b">⚠</span>' : ''}</div>
+            <div class="ps-reason-bar-wrap">
+              <div class="ps-reason-bar-fill" style="width:${Math.round((r.nCount / maxCount) * 100)}%;background:${barColor}"></div>
+            </div>
+            <div class="ps-reason-count">${r.nCount}</div>
+            <div class="ps-reason-charges">${r.dblCharges ? fmtMoney(r.dblCharges) : ''}</div>
+          </div>`;
+        }).join('');
+
+        insightsHtml = `
+          <div class="ps-sh" style="margin:0 -18px;padding:8px 18px 6px">Root Cause Breakdown</div>
+          <div style="padding:12px 0">
+            ${splitHtml}
+            ${reasonRowsHtml}
+          </div>`;
+      }
+
+      // Filter bar + repair table
+      const filterBarHtml = repairs.length > 0 ? `
+        <div class="ps-sh" style="margin:0 -18px;padding:8px 18px 6px">Repair History</div>
+        <div class="ps-repair-filter-bar" id="repairFilterBar">
+          <span class="ps-repair-filter-lbl">Show:</span>
+          <button class="ps-repair-filter-btn active" data-cat="all">All</button>
+          <button class="ps-repair-filter-btn" data-cat="2">Avoidable</button>
+          <button class="ps-repair-filter-btn" data-cat="1">Wear &amp; Tear</button>
+          <span class="ps-repair-count-note" id="repairCountNote">${repairs.length} repair${repairs.length !== 1 ? 's' : ''}</span>
         </div>` : '';
 
-      const maxCount = reasons[0]?.nCount || 1;
-      const reasonRowsHtml = reasons.map(r => {
-        const isAvoidable = r.nReasonCategory === 2;
-        const barColor = isAvoidable ? '#f59e0b' : '#2563eb';
-        const labelStyle = isAvoidable ? 'color:#92400e;font-weight:500' : 'color:#111827';
-        return `
-        <div class="ps-reason-row">
-          <div class="ps-reason-label" style="${labelStyle}" title="${r.sReason||''}">${r.sReason || '—'}${isAvoidable ? ' <span style="font-size:9px;color:#f59e0b">⚠</span>' : ''}</div>
-          <div class="ps-reason-bar-wrap">
-            <div class="ps-reason-bar-fill" style="width:${Math.round((r.nCount / maxCount) * 100)}%;background:${barColor}"></div>
-          </div>
-          <div class="ps-reason-count">${r.nCount}</div>
-          <div class="ps-reason-charges">${r.dblCharges ? fmtMoney(r.dblCharges) : ''}</div>
-        </div>`;
-      }).join('');
+      const repairTableHtml = repairs.length > 0 ? `
+        <div style="margin:0 -18px;overflow-x:auto">
+          <table class="ps-repair-table" style="margin:0;table-layout:fixed;width:100%" id="repairTable">
+            <thead><tr>
+              <th style="width:8%">WO #</th>
+              <th style="width:7%">Date</th>
+              <th style="width:11%">Scope</th>
+              <th style="width:18%">Complaint</th>
+              <th>Root Cause</th>
+              <th style="width:9%">Category</th>
+              <th style="width:4%;text-align:center">TAT</th>
+              <th style="width:8%">Result</th>
+            </tr></thead>
+            <tbody id="repairTbody">
+              ${repairs.map(r => {
+                const tat  = calcTAT(r);
+                const tatHtml = tat !== null
+                  ? `<span class="ps-tat">${tat}d</span>`
+                  : `<span class="ps-tat" style="color:#d1d5db">—</span>`;
+                const outcomeHtml = `<div class="ps-outcome">
+                  ${pfChip(r.sInsFinalPF)}
+                  ${r.bReplaced   ? `<span class="ps-flag-chip"><i class="bi bi-arrow-repeat"></i> Repl</span>` : ''}
+                  ${r.bOutsourced ? `<span class="ps-flag-chip"><i class="bi bi-box-arrow-up-right"></i> Vend</span>` : ''}
+                </div>`;
+                return `<tr data-cat="${r.nReasonCategory || 0}">
+                  <td style="font-family:monospace;font-size:10.5px;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.sWorkOrderNumber || '—'}</td>
+                  <td style="color:#6b7280">${fmtDate(r.dtDateIn)}</td>
+                  <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.sScopeTypeDesc||''}">
+                    <span style="font-weight:600;color:rgb(17,60,139)">${r.sScopeTypeDesc || '—'}</span>
+                    ${r.sSerialNumber ? `<br><span style="font-size:10px;color:#9ca3af">${r.sSerialNumber}</span>` : ''}
+                  </td>
+                  <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+                      title="${r.sComplaintDesc||''}">${r.sComplaintDesc || '—'}</td>
+                  <td class="ps-root-cause" title="${r.sRepairReason||''}">${r.sRepairReason || '<span style="color:#d1d5db">—</span>'}</td>
+                  <td>${categoryChip(r.nReasonCategory)}</td>
+                  <td style="text-align:center">${tatHtml}</td>
+                  <td>${outcomeHtml}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>` : '';
 
-      reasonsHtml = splitHtml + reasonRowsHtml;
+      repairsInsightsHtml = summaryHtml + insightsHtml + filterBarHtml + repairTableHtml;
     }
 
     // ── Documents tab ────────────────────────────────────────────
@@ -1455,8 +1616,8 @@
       ${tabBarHtml}
 
       <div class="ps-dtab-pane active" data-tab="overview">${overviewHtml}</div>
+      <div class="ps-dtab-pane" data-tab="repairs">${repairsInsightsHtml}</div>
       <div class="ps-dtab-pane" data-tab="equipment">${equipmentHtml}</div>
-      <div class="ps-dtab-pane" data-tab="reasons">${reasonsHtml}</div>
       <div class="ps-dtab-pane" data-tab="documents">${documentsHtml}</div>
     `;
 
@@ -1468,6 +1629,27 @@
       document.querySelectorAll('.ps-dtab').forEach(b => b.classList.toggle('active', b === btn));
       document.querySelectorAll('.ps-dtab-pane').forEach(p => p.classList.toggle('active', p.dataset.tab === tab));
     });
+
+    // Attach repair category filter
+    const filterBar = document.getElementById('repairFilterBar');
+    if (filterBar) {
+      filterBar.addEventListener('click', e => {
+        const btn = e.target.closest('.ps-repair-filter-btn');
+        if (!btn) return;
+        filterBar.querySelectorAll('.ps-repair-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const cat = btn.dataset.cat;
+        const rows = document.querySelectorAll('#repairTbody tr');
+        let shown = 0;
+        rows.forEach(r => {
+          const match = cat === 'all' || r.dataset.cat === cat;
+          r.style.display = match ? '' : 'none';
+          if (match) shown++;
+        });
+        document.getElementById('repairCountNote').textContent =
+          shown + ' repair' + (shown !== 1 ? 's' : '') + (cat !== 'all' ? ' (filtered)' : '');
+      });
+    }
   }
 
   function rStatusNormalize(s) {
