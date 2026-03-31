@@ -1396,26 +1396,55 @@
         </table>`
       : `<div style="padding:16px 0;color:#6c757d;font-size:12px;font-style:italic">No repairs on record for this contract.</div>`;
 
+    // Avg TAT for overview
+    const ovAvgTAT = (() => {
+      const tats = repairs.map(calcTAT).filter(t => t !== null);
+      if (!tats.length) return null;
+      return Math.round(tats.reduce((a, b) => a + b, 0) / tats.length * 10) / 10;
+    })();
+
     const overviewHtml = `
-      <div class="ps-card">
-        <div class="ps-card-head"><i class="bi bi-bar-chart-line"></i> Consumption</div>
-        <div class="ps-card-body">
-          <div class="ps-consume-meta">
-            <span><strong>${fmtMoney(totalCharges)}</strong> charged under contract</span>
-            <span>${pct}% of ${fmtMoney(totalValue)}</span>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div class="ps-card" style="margin-bottom:0">
+          <div class="ps-card-head"><i class="bi bi-bar-chart-line"></i> Consumption</div>
+          <div class="ps-card-body">
+            <div style="font-size:20px;font-weight:800;color:rgb(17,60,139);margin-bottom:6px">${pct}%<span style="font-size:11px;font-weight:500;color:#6b7280;margin-left:6px">used</span></div>
+            <div class="ps-bar-track" style="margin-bottom:8px">
+              <div class="ps-bar-fill" style="width:${pct}%"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:10.5px;color:#6b7280">
+              <span><strong style="color:#111">${fmtMoney(totalCharges)}</strong> charged</span>
+              <span>of ${fmtMoney(totalValue)}</span>
+            </div>
+            <div style="font-size:10px;color:#9ca3af;margin-top:4px">${repairs.length} repair${repairs.length !== 1 ? 's' : ''} processed
+              ${contract.sPurchaseOrder ? ' · PO: ' + contract.sPurchaseOrder : ''}
+              · Billed to: ${contract.sBillEmail || 'not on file'}</div>
           </div>
-          <div class="ps-bar-track">
-            <div class="ps-bar-fill" style="width:${pct}%"></div>
+        </div>
+        <div class="ps-card" style="margin-bottom:0">
+          <div class="ps-card-head"><i class="bi bi-activity"></i> Repair Snapshot</div>
+          <div class="ps-card-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+              <div>
+                <div style="font-size:20px;font-weight:800;color:rgb(17,60,139)">${repairs.length}</div>
+                <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#6b7280;letter-spacing:0.04em">Repairs</div>
+              </div>
+              <div>
+                <div style="font-size:20px;font-weight:800;color:${avoidablePct !== null && avoidablePct >= 50 ? '#b45309' : avoidablePct !== null && avoidablePct <= 25 ? '#15803d' : 'rgb(17,60,139)'}">${avoidablePct !== null ? avoidablePct + '%' : '—'}</div>
+                <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#6b7280;letter-spacing:0.04em">Avoidable</div>
+              </div>
+              <div>
+                <div style="font-size:20px;font-weight:800;color:${ovAvgTAT !== null && ovAvgTAT <= 5 ? '#15803d' : ovAvgTAT !== null && ovAvgTAT >= 10 ? '#b71234' : 'rgb(17,60,139)'}">${ovAvgTAT !== null ? ovAvgTAT + 'd' : '—'}</div>
+                <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#6b7280;letter-spacing:0.04em">Avg TAT</div>
+              </div>
+            </div>
           </div>
-          <div class="ps-consume-note">${repairs.length} repair${repairs.length !== 1 ? 's' : ''} processed
-            ${contract.sPurchaseOrder ? ' · PO: ' + contract.sPurchaseOrder : ''}
-            · Billed to: ${contract.sBillEmail || 'not on file'}</div>
         </div>
       </div>
       <div class="ps-card">
         <div class="ps-card-head"><i class="bi bi-shield-check"></i> What's Covered</div>
         <div class="ps-card-body">
-          <div class="ps-coverage">
+          <div class="ps-coverage" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">
             ${pillsHtml}
             ${deptNames.length ? '<span class="sep" style="color:#ddd">|</span>' + coverageDeptsHtml : ''}
           </div>
