@@ -1328,7 +1328,6 @@
     const tabBarHtml = `
 <div class="ps-dtab-bar" id="dtabBar">
   <button class="ps-dtab active" data-tab="overview">Overview</button>
-  <button class="ps-dtab" data-tab="insights">Insights <span class="ps-dtab-badge">${reasons.length}</span></button>
   <button class="ps-dtab" data-tab="history">Repair History <span class="ps-dtab-badge">${repairs.length}</span></button>
   <button class="ps-dtab" data-tab="equipment">Equipment <span class="ps-dtab-badge">${scopes.length}</span></button>
   <button class="ps-dtab" data-tab="documents">Documents</button>
@@ -1705,8 +1704,7 @@
 
       ${tabBarHtml}
 
-      <div class="ps-dtab-pane active" data-tab="overview">${overviewHtml}</div>
-      <div class="ps-dtab-pane" data-tab="insights">${insightsTabHtml}</div>
+      <div class="ps-dtab-pane active" data-tab="overview">${overviewHtml}${insightsTabHtml}</div>
       <div class="ps-dtab-pane" data-tab="history">${historyTabHtml}</div>
       <div class="ps-dtab-pane" data-tab="equipment">${equipmentHtml}</div>
       <div class="ps-dtab-pane" data-tab="documents">${documentsHtml}</div>
