@@ -82,9 +82,11 @@ function buildPayload(p) {
         ReadyTime: hhmm(p.readyTime || '08:00'),
         PickupDate: yyyymmdd
       },
+      // NOTE: UPS v2409 enforces 27 char max for CompanyName/ContactName
+      // (docs claim 35 — they lie). Probed empirically against CIE.
       PickupAddress: {
-        CompanyName: (p.companyName || '').slice(0, 35),
-        ContactName: (p.contactName || '').slice(0, 35),
+        CompanyName: (p.companyName || '').slice(0, 27),
+        ContactName: (p.contactName || '').slice(0, 27),
         AddressLine: (p.address1 || '').slice(0, 35),
         ...(p.address2 ? { Room: String(p.address2).slice(0, 35) } : {}),
         City: (p.city || '').slice(0, 30),
