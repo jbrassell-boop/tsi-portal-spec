@@ -86,14 +86,13 @@ function buildPayload(p) {
         CompanyName: (p.companyName || '').slice(0, 35),
         ContactName: (p.contactName || '').slice(0, 35),
         AddressLine: (p.address1 || '').slice(0, 35),
-        Room: (p.address2 || '').slice(0, 35),
+        ...(p.address2 ? { Room: String(p.address2).slice(0, 35) } : {}),
         City: (p.city || '').slice(0, 30),
         StateProvince: (p.state || '').slice(0, 5),
-        Urbanization: '',
         PostalCode: (p.zip || '').slice(0, 10),
         CountryCode: 'US',
         ResidentialIndicator: p.residential ? 'Y' : 'N',
-        Phone: phoneDigits ? { Number: phoneDigits } : undefined
+        ...(phoneDigits ? { Phone: { Number: phoneDigits } } : {})
       },
       AlternateAddressIndicator: 'Y',
       PickupPiece: [{
@@ -107,7 +106,7 @@ function buildPayload(p) {
         UnitOfMeasurement: 'LBS'
       },
       OverweightIndicator: (Number(p.weightLbs || 0) > 70) ? 'Y' : 'N',
-      PaymentMethod: '00',            // 00 = Bill Shipper (TSI account)
+      PaymentMethod: '01',            // 01 = Bill Shipper (TSI account) per v2409 spec
       SpecialInstruction: (p.specialInstruction || '').slice(0, 90)
     }
   };
