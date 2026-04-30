@@ -7,6 +7,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '..')));
 app.use('/api', require('./routes/portal'));
 app.use('/api/pickup', require('./routes/ups-pickup'));
+app.use('/api/fedex-pickup', require('./routes/fedex-pickup'));
 
 app.use((err, req, res, next) => {
   console.error(err);
