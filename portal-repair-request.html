@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Repair Request Form — TSI Customer Portal</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
+<style>
+  body {
+    background: #eef1f5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #2c3e50;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* ── Header bar ── */
+  .portal-header {
+    background: linear-gradient(135deg, #143B87 0%, #1e5cb3 100%);
+    color: #fff;
+    padding: 14px 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+  }
+  .portal-header h1 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: .3px; }
+  .portal-header .subtitle { font-size: 11px; opacity: .85; margin-top: 2px; }
+
+  /* ── Form card ── */
+  .form-wrap { max-width: 1080px; margin: 22px auto; padding: 0 16px; }
+  .repair-form-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 22px 28px;
+    box-shadow: 0 4px 20px rgba(20,59,135,.08);
+    border: 1px solid #dee2e6;
+  }
+
+  .section-header-alt {
+    display: inline-block;
+    font-weight: 700;
+    color: #143B87;
+    font-size: 13px;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    border-bottom: 2px solid #143B87;
+    padding-bottom: 2px;
+    margin-bottom: 8px;
+  }
+
+  /* ── Inputs ── */
+  label.input-label, label.form-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 2px;
+  }
+  .text-right { text-align: right; }
+  .form-control-sm { font-size: 13px; padding: 4px 8px; height: 32px; }
+  textarea.form-control-sm { height: auto; }
+
+  /* ── Disinfection warning ── */
+  .disinfect-warning {
+    background: #ffe5e5;
+    border: 2px solid #c0392b;
+    color: #8b0000;
+    text-align: center;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin: 14px 0;
+  }
+
+  /* ── Questions inline row ── */
+  .questions-inline-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+  }
+  .question-inline-col label { display:block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #495057; }
+  .question-inline-col .form-check-inline { margin-right: 14px; }
+
+  /* ── Pickup section ── */
+  .pickup-row {
+    background: #e7f3ff;
+    border: 1px solid #b3d4ff;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 8px;
+  }
+  .pickup-toggle {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 14px 0 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* ── Submit ── */
+  .btn-submit-form {
+    background: #143B87;
+    color: #fff;
+    border: 0;
+    padding: 10px 32px;
+    font-weight: 600;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all .15s;
+  }
+  .btn-submit-form:hover { background: #0f2c66; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(20,59,135,.3); }
+  .btn-submit-form:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* ── Result modal ── */
+  .result-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.15);
+    max-width: 560px;
+    margin: 28px auto;
+    border-top: 5px solid #28a745;
+  }
+  .result-card.fail { border-top-color: #dc3545; }
+  .result-card h3 { margin-top: 0; }
+  .result-card .prn { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 16px; background: #f1f3f5; padding: 6px 10px; border-radius: 4px; display: inline-block; }
+
+  .small-muted { font-size: 11px; color: #6c757d; }
+  .demo-badge {
+    background: #f59e0b; color: #fff; font-size: 10px; font-weight: 700;
+    padding: 3px 8px; border-radius: 3px; margin-left: 8px; vertical-align: middle;
+  }
+  hr.section-sep { border: 0; border-top: 1px dashed #dee2e6; margin: 16px 0; }
+</style>
+</head>
+<body>
+
+<div class="portal-header">
+  <h1>
+    <i class="bi bi-file-medical"></i>
+    Repair Request Form
+    <span class="demo-badge">DEMO — UPS PICKUP WIRED LIVE</span>
+  </h1>
+  <div class="subtitle">Total Scope, Inc. Customer Portal — submit a scope/instrument for repair</div>
+</div>
+
+<div class="form-wrap">
+
+  <div class="repair-form-card" id="formCard">
+
+    <!-- ═══ RETURN TO ═══ -->
+    <div class="row mb-2">
+      <div class="col-12">
+        <span class="section-header-alt">Return To</span>
+      </div>
+    </div>
+
+    <div class="row g-2 mb-2">
+      <div class="col-md-2 d-flex align-items-center">
+        <label class="input-label text-right w-100 pe-2">Address Line 1:</label>
+      </div>
+      <div class="col-md-4">
+        <input id="address1" class="form-control form-control-sm" value="498 N Wiget Ln" />
+      </div>
+      <div class="col-md-2 d-flex align-items-center">
+        <label class="input-label text-right w-100 pe-2">Email Address:</label>
+      </div>
+      <div class="col-md-4">
+        <input id="emailAddress" class="form-control form-control-sm" value="admin@shadelandsendo.com" />
+      </div>
+    </div>
+
+    <div class="row g-2 mb-2">
+      <div class="col-md-2 d-flex align-items-center">
+        <label class="input-label text-right w-100 pe-2">Address Line 2:</label>
+      </div>
+      <div class="col-md-4">
+        <input id="address2" class="form-control form-control-sm" value="" />
+      </div>
+      <div class="col-md-2 d-flex align-items-center">
+        <label class="input-label text-right w-100 pe-2">Phone Number:</label>
+      </div>
+      <div class="col-md-4">
+        <input id="phone" class="form-control form-control-sm" value="(925) 933-3600" />
+      </div>
+    </div>
+
+    <div class="row g-2 mb-2">
+      <div class="col-md-2 d-flex align-items-center">
+        <label class="input-label text-right w-100 pe-2">City:</label>
+      </div>
+      <div class="col-md-4">
+        <input id="city" class="form-control form-control-sm" value="Walnut Creek" />
+      </div>
+      <div class="col-md-2 d-flex align-items-center">
+        <label class="input-label text-right w-100 pe-2">Model:</label>
+      </div>
+      <div class="col-md-4">
+        <input id="model" class="form-control form-control-sm" value="GIF-H190" />
+      </div>
+    </div>
+
+    <div class="row g-2 mb-2">
+      <div class="col-md-2 d-flex align-items-center">
+        <label class="input-label text-right w-100 pe-2">State:</label>
+      </div>
+      <div class="col-md-4">
+        <input id="state" class="form-control form-control-sm" maxlength="2" value="CA" style="width: 80px;" />
+      </div>
+      <div class="col-md-2 d-flex align-items-center">
+        <label class="input-label text-right w-100 pe-2">Serial Number:</label>
+      </div>
+      <div class="col-md-4">
+        <input id="serial" class="form-control form-control-sm" value="2312451" />
+      </div>
+    </div>
+
+    <div class="row g-2 mb-2">
+      <div class="col-md-2 d-flex align-items-center">
+        <label class="input-label text-right w-100 pe-2">Zip Code:</label>
+      </div>
+      <div class="col-md-4">
+        <input id="zip" class="form-control form-control-sm" maxlength="10" value="94598" style="width: 120px;" />
+      </div>
+    </div>
+
+    <hr class="section-sep" />
+
+    <!-- ═══ PERCEIVED PROBLEM ═══ -->
+    <div class="row mb-2">
+      <div class="col-12">
+        <span class="section-header-alt">Customer Perceived Problem</span>
+      </div>
+      <div class="col-12">
+        <textarea id="problem" class="form-control form-control-sm" rows="2">Image problem, sometimes it works and sometimes it does not. It will work for a day or two then the image will have issues.</textarea>
+      </div>
+    </div>
+
+    <div class="disinfect-warning">
+      ⚠ ALL PRODUCTS NEED TO BE PROPERLY DISINFECTED PRIOR TO SHIPMENT!
+    </div>
+
+    <!-- ═══ HOSPITAL / CONTACT ═══ -->
+    <div class="row g-2 mb-2">
+      <div class="col-md-2 d-flex align-items-center">
+        <label class="input-label text-right w-100 pe-2">Hospital:</label>
+      </div>
+      <div class="col-md-4">
+        <input id="hospital" class="form-control form-control-sm" value="Shadelands Advanced Endoscopy" />
+      </div>
+      <div class="col-md-2 d-flex align-items-center">
+        <label class="input-label text-right w-100 pe-2">Department:</label>
+      </div>
+      <div class="col-md-4">
+        <input id="department" class="form-control form-control-sm" value="Endoscopy" />
+      </div>
+    </div>
+
+    <div class="row g-2 mb-2">
+      <div class="col-md-2 d-flex align-items-center">
+        <label class="input-label text-right w-100 pe-2">Name of Contact:</label>
+      </div>
+      <div class="col-md-4">
+        <input id="contactName" class="form-control form-control-sm" value="Rosa C." />
+      </div>
+      <div class="col-md-2 d-flex align-items-center">
+        <label class="input-label text-right w-100 pe-2">Purchase Order #:</label>
+      </div>
+      <div class="col-md-4">
+        <input id="po" class="form-control form-control-sm" value="" />
+      </div>
+    </div>
+
+    <hr class="section-sep" />
+
+    <!-- ═══ THREE QUESTIONS ═══ -->
+    <div class="questions-inline-row">
+      <div class="question-inline-col">
+        <label>Did the failure occur during a case?</label>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" name="failure" value="Yes" id="failYes" checked />
+          <label class="form-check-label" for="failYes">Yes</label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" name="failure" value="No" id="failNo" />
+          <label class="form-check-label" for="failNo">No</label>
+        </div>
+      </div>
+
+      <div class="question-inline-col">
+        <label>Has this scope been cleaned and disinfected?</label>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" name="cleaned" value="Yes" id="clYes" checked />
+          <label class="form-check-label" for="clYes">Yes</label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" name="cleaned" value="No" id="clNo" />
+          <label class="form-check-label" for="clNo">No</label>
+        </div>
+      </div>
+
+      <div class="question-inline-col">
+        <label>How would you like to receive your quote?</label>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" name="quoteVia" value="Email" id="qvEmail" checked />
+          <label class="form-check-label" for="qvEmail">Email</label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" name="quoteVia" value="Phone" id="qvPhone" />
+          <label class="form-check-label" for="qvPhone">Phone</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PICKUP TOGGLE ═══ -->
+    <div class="pickup-toggle">
+      <input class="form-check-input" type="checkbox" id="pickupNeeded" checked onchange="togglePickup()" />
+      <label class="form-check-label fw-bold" for="pickupNeeded" style="font-size: 14px; cursor: pointer;">
+        <i class="bi bi-truck"></i> I Need Pickup Scheduled
+      </label>
+      <span class="small-muted ms-auto">UPS will pick up at the Return To address above. <strong>TSI pays freight.</strong></span>
+    </div>
+
+    <!-- ═══ PICKUP DETAILS ═══ -->
+    <div id="pickupRow" class="pickup-row">
+      <div class="row g-2 align-items-center">
+        <div class="col-md-1"><label class="input-label">Carrier:</label></div>
+        <div class="col-md-2">
+          <select id="carrier" class="form-select form-select-sm">
+            <option value="UPS" selected>UPS</option>
+            <option value="FedEx">FedEx (manual)</option>
+          </select>
+        </div>
+        <div class="col-md-1"><label class="input-label">Pickup Date:</label></div>
+        <div class="col-md-2">
+          <input id="pickupDate" type="date" class="form-control form-control-sm" />
+        </div>
+        <div class="col-md-1"><label class="input-label">Ready:</label></div>
+        <div class="col-md-2">
+          <input id="readyTime" type="time" class="form-control form-control-sm" value="08:00" />
+        </div>
+        <div class="col-md-1"><label class="input-label">Latest:</label></div>
+        <div class="col-md-2">
+          <input id="closeTime" type="time" class="form-control form-control-sm" value="14:00" />
+        </div>
+      </div>
+      <div class="row g-2 mt-2">
+        <div class="col-md-1"><label class="input-label">Weight:</label></div>
+        <div class="col-md-2">
+          <div class="input-group input-group-sm">
+            <input id="weightLbs" type="number" class="form-control form-control-sm" value="10" min="1" />
+            <span class="input-group-text">lbs</span>
+          </div>
+        </div>
+        <div class="col-md-1"><label class="input-label">Pkgs:</label></div>
+        <div class="col-md-1">
+          <input id="packageCount" type="number" class="form-control form-control-sm" value="1" min="1" />
+        </div>
+        <div class="col-md-1"><label class="input-label small-muted">Special:</label></div>
+        <div class="col-md-6">
+          <input id="specialInstruction" class="form-control form-control-sm" maxlength="90"
+                 placeholder="(auto-filled from Model + Serial)" />
+        </div>
+      </div>
+    </div>
+
+    <hr class="section-sep" />
+
+    <!-- ═══ SUBMIT ═══ -->
+    <div class="row">
+      <div class="col-12 text-center">
+        <button id="btnSubmit" type="button" class="btn-submit-form" onclick="submitRequest()">
+          <i class="bi bi-send"></i> Submit Request
+        </button>
+        <div class="small-muted mt-2">
+          On submit: emails <code>ops-tsi@totalscopeinc.com</code> with all fields above (mocked here),
+          and if pickup checked → schedules UPS pickup live and includes the PRN.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ RESULT PANEL ═══ -->
+  <div id="resultArea" style="display:none;"></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+// Default Pickup Date = tomorrow
+$('pickupDate').value = (() => {
+  const d = new Date(); d.setDate(d.getDate() + 1);
+  return d.toISOString().slice(0, 10);
+})();
+
+function togglePickup() {
+  $('pickupRow').style.display = $('pickupNeeded').checked ? '' : 'none';
+}
+
+function radioVal(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return el ? el.value : '';
+}
+
+function specialInstructionAuto() {
+  const v = $('specialInstruction').value.trim();
+  if (v) return v;
+  const m = $('model').value, s = $('serial').value;
+  return `${m} SN ${s} - TSI Repair RMA`.slice(0, 90);
+}
+
+function showResult(html, ok) {
+  const area = $('resultArea');
+  area.style.display = '';
+  area.innerHTML = `<div class="result-card ${ok ? '' : 'fail'}">${html}</div>`;
+  area.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function submitRequest() {
+  $('btnSubmit').disabled = true;
+  $('btnSubmit').innerHTML = '<i class="bi bi-hourglass-split"></i> Submitting…';
+
+  const wantsPickup = $('pickupNeeded').checked;
+  const carrier = $('carrier').value;
+
+  // Always show the "would email Ops" mock
+  const opsEmailLines = [
+    `Hospital: ${$('hospital').value}`,
+    `Department: ${$('department').value}`,
+    `Contact: ${$('contactName').value}`,
+    `Model: ${$('model').value}    Serial: ${$('serial').value}    PO: ${$('po').value || '(none)'}`,
+    `Problem: ${$('problem').value.slice(0, 80)}…`,
+    `Return Address: ${$('address1').value}, ${$('city').value}, ${$('state').value} ${$('zip').value}`,
+    `Failed during case: ${radioVal('failure')}    Cleaned: ${radioVal('cleaned')}    Quote via: ${radioVal('quoteVia')}`
+  ];
+
+  if (!wantsPickup) {
+    showResult(`
+      <h3>✓ Repair Request Submitted</h3>
+      <p>Your request was sent to Total Scope Operations. You'll receive a quote via the method you selected.</p>
+      <hr/>
+      <div class="small-muted"><strong>Mocked email to ops-tsi@totalscopeinc.com:</strong></div>
+      <pre style="font-size:11px; background:#f8f9fa; padding:10px; border-radius:4px; white-space:pre-wrap;">${opsEmailLines.join('\n')}</pre>
+    `, true);
+    $('btnSubmit').disabled = false;
+    $('btnSubmit').innerHTML = '<i class="bi bi-send"></i> Submit Request';
+    return;
+  }
+
+  if (carrier === 'FedEx') {
+    showResult(`
+      <h3>✓ Repair Request Submitted</h3>
+      <p>FedEx pickup is not yet wired into the demo — Ops will schedule it manually.</p>
+      <hr/>
+      <div class="small-muted">A pickup-needed line is included on the email to Ops.</div>
+    `, true);
+    $('btnSubmit').disabled = false;
+    $('btnSubmit').innerHTML = '<i class="bi bi-send"></i> Submit Request';
+    return;
+  }
+
+  // UPS — call the live pickup API
+  const payload = {
+    companyName: $('hospital').value,
+    contactName: $('contactName').value,
+    phone: $('phone').value,
+    address1: $('address1').value,
+    address2: $('address2').value,
+    city: $('city').value,
+    state: $('state').value,
+    zip: $('zip').value,
+    pickupDate: $('pickupDate').value,
+    readyTime: $('readyTime').value,
+    closeTime: $('closeTime').value,
+    packageCount: Number($('packageCount').value) || 1,
+    weightLbs: Number($('weightLbs').value) || 10,
+    specialInstruction: specialInstructionAuto(),
+    residential: false
+  };
+
+  try {
+    const r = await fetch('/api/pickup/schedule', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const j = await r.json();
+
+    if (j.success) {
+      showResult(`
+        <h3>✓ Repair Request Submitted + UPS Pickup Scheduled</h3>
+        <p><strong>UPS Pickup Request Number:</strong> <span class="prn">${j.prn}</span></p>
+        <p>UPS will arrive at <strong>${$('address1').value}, ${$('city').value}</strong> on
+        <strong>${$('pickupDate').value}</strong> between
+        <strong>${$('readyTime').value}</strong> and <strong>${$('closeTime').value}</strong>.</p>
+        <hr/>
+        <div class="small-muted"><strong>Mocked email to ops-tsi@totalscopeinc.com:</strong></div>
+        <pre style="font-size:11px; background:#f8f9fa; padding:10px; border-radius:4px; white-space:pre-wrap;">${opsEmailLines.join('\n')}
+Customer Needs Pickup Scheduled - UPS.
+Pickup Date: ${$('pickupDate').value}
+Ready Time:  ${$('readyTime').value}
+Latest Pickup Time: ${$('closeTime').value}
+✓ Auto-scheduled with UPS — PRN ${j.prn} (env: ${j.env})</pre>
+      `, true);
+    } else {
+      showResult(`
+        <h3>✗ Repair Request submitted, but UPS Pickup failed</h3>
+        <p>The repair request itself was sent to Ops. The UPS pickup call returned an error — Ops will schedule it manually.</p>
+        <p><strong>UPS error:</strong> ${j.error}</p>
+        <pre style="font-size:11px; background:#fff5f5; padding:10px; border-radius:4px; white-space:pre-wrap; max-height:300px; overflow:auto;">${JSON.stringify(j.ups || j, null, 2)}</pre>
+      `, false);
+    }
+  } catch (e) {
+    showResult(`
+      <h3>✗ Network error</h3>
+      <p>Could not reach the pickup service. Repair request will still be sent to Ops to schedule manually.</p>
+      <p>${e.message}</p>
+    `, false);
+  } finally {
+    $('btnSubmit').disabled = false;
+    $('btnSubmit').innerHTML = '<i class="bi bi-send"></i> Submit Request';
+  }
+}
+</script>
+</body>
+</html>
