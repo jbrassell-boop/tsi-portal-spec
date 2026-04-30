@@ -17,8 +17,8 @@ const HOST = ENV === 'PRODUCTION'
   ? 'https://onlinetools.ups.com'
   : 'https://wwwcie.ups.com';
 
-// UPS Pickup On-Call API version. Override via env if UPS publishes a new one.
-const PICKUP_VER = process.env.UPS_PICKUP_VERSION || 'v1607';
+// UPS Pickup Creation API version. Override via env if UPS publishes a new one.
+const PICKUP_VER = process.env.UPS_PICKUP_VERSION || 'v2409';
 
 const CLIENT_ID     = process.env.UPS_CLIENT_ID     || '';
 const CLIENT_SECRET = process.env.UPS_CLIENT_SECRET || '';
@@ -129,7 +129,7 @@ router.post('/schedule', async (req, res) => {
     const payload = buildPayload(p);
 
     const transId = 'tsi-' + Date.now();
-    const upsRes = await fetch(`${HOST}/api/shipments/${PICKUP_VER}/pickup`, {
+    const upsRes = await fetch(`${HOST}/api/pickupcreation/${PICKUP_VER}/pickup`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
