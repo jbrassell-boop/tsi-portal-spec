@@ -8,6 +8,8 @@ app.use(express.static(path.join(__dirname, '..')));
 app.use('/api', require('./routes/portal'));
 app.use('/api/pickup', require('./routes/ups-pickup'));
 app.use('/api/fedex-pickup', require('./routes/fedex-pickup'));
+app.use('/api/label/ups', require('./routes/ups-label'));
+app.use('/api/label/fedex', require('./routes/fedex-label'));
 
 app.use((err, req, res, next) => {
   console.error(err);

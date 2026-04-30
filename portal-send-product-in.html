@@ -374,7 +374,7 @@
             <label>Carrier:</label>
             <select id="carrier">
               <option value="UPS" selected>UPS</option>
-              <option value="FedEx">FedEx (manual)</option>
+              <option value="FedEx">FedEx</option>
             </select>
             <label>Pickup Date:</label>
             <input id="pickupDate" type="date" />
@@ -471,79 +471,103 @@ async function submitRequest() {
   const carrier = $('carrier').value;
   const opsEmail = buildOpsEmail();
 
-  if (!wantsPickup) {
-    showResult(`
-      <h5>✓ Repair Request Submitted</h5>
-      <p style="font-size:12px; color:#374151;">Your request was sent to Total Scope Operations. You'll receive a quote via the method you selected.</p>
-      <hr class="rrf-divider" />
-      <div style="font-size:10.5px; color:#6c757d;"><strong>Mock email to ops-tsi@totalscopeinc.com:</strong></div>
-      <div class="rrf-mock-email">${opsEmail}</div>
-    `, true);
-    resetBtn();
-    return;
-  }
-
-  // Build common payload (UPS and FedEx routes accept same shape)
+  // Common payload — both label and pickup routes accept the same shape
   const payload = {
     companyName: $('hospital').value,
     contactName: $('contactName').value,
     phone: $('phone').value,
+    emailAddress: $('emailAddress').value,
     address1: $('address1').value,
     address2: $('address2').value,
     city: $('city').value,
     state: $('state').value,
     zip: $('zip').value,
-    emailAddress: $('emailAddress').value,
     pickupDate: $('pickupDate').value,
     readyTime: $('readyTime').value,
     closeTime: $('closeTime').value,
     packageCount: Number($('packageCount').value) || 1,
     weightLbs: Number($('weightLbs').value) || 10,
     specialInstruction: specialInstructionAuto(),
+    description: specialInstructionAuto(),
     residential: false
   };
 
-  // Carrier-specific endpoint
-  const endpoint = carrier === 'FedEx' ? '/api/fedex-pickup/schedule' : '/api/pickup/schedule';
-  const carrierLabel = carrier === 'FedEx' ? 'FedEx' : 'UPS';
+  // Always generate a label — free per call. Pickup is conditional.
+  const labelEndpoint  = carrier === 'FedEx' ? '/api/label/fedex/generate' : '/api/label/ups/generate';
+  const pickupEndpoint = carrier === 'FedEx' ? '/api/fedex-pickup/schedule' : '/api/pickup/schedule';
+  const calls = [
+    fetch(labelEndpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) }).then(r => r.json()).catch(e => ({success:false, error:e.message})),
+    wantsPickup
+      ? fetch(pickupEndpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) }).then(r => r.json()).catch(e => ({success:false, error:e.message}))
+      : Promise.resolve(null)
+  ];
+  const [labelRes, pickupRes] = await Promise.all(calls);
 
-  try {
-    const r = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const j = await r.json();
+  // ── Build result HTML ──
+  let html = '';
 
-    if (j.success) {
-      const confNum = j.prn || j.confirmationNumber || '(none)';
-      const confLabel = carrier === 'FedEx' ? 'FedEx Confirmation #' : 'UPS Pickup Request Number (PRN)';
-      const errorBlob = '';
-      showResult(`
-        <h5>✓ Repair Request Submitted &amp; ${carrierLabel} Pickup Scheduled</h5>
-        <p style="font-size:12px;">${confLabel}: <span class="prn">${confNum}</span></p>
-        <p style="font-size:12px; color:#374151;">${carrierLabel} will arrive at <strong>${$('address1').value}, ${$('city').value}</strong> on
-          <strong>${$('pickupDate').value}</strong> between
-          <strong>${$('readyTime').value}</strong> and <strong>${$('closeTime').value}</strong>.
-          <span style="font-size:10.5px; color:#6c757d;">(env: ${j.env})</span>
-        </p>
-        <hr class="rrf-divider" />
-        <div style="font-size:10.5px; color:#6c757d;"><strong>Mock email to ops-tsi@totalscopeinc.com:</strong></div>
-        <div class="rrf-mock-email">${opsEmail}\n\nCustomer Needs Pickup Scheduled - ${carrierLabel}.\nPickup Date: ${$('pickupDate').value}\nReady Time: ${$('readyTime').value}\nLatest Pickup Time: ${$('closeTime').value}\n\n✓ Auto-scheduled with ${carrierLabel} — Confirmation ${confNum}</div>
-      `, true);
-    } else {
-      showResult(`
-        <h5>✗ Repair Request submitted, but ${carrierLabel} Pickup failed</h5>
-        <p style="font-size:12px;">The repair request itself was sent to Ops. Operations will schedule the pickup manually.</p>
-        <p style="font-size:12px;"><strong>${carrierLabel} error:</strong> ${j.error}</p>
-        <pre style="font-size:10.5px; background:#fff5f5; padding:10px; border-radius:4px; max-height:240px; overflow:auto;">${JSON.stringify(j.fedex || j.ups || j, null, 2)}</pre>
-      `, false);
-    }
-  } catch (e) {
-    showResult(`<h5>✗ Network error</h5><p>${e.message}</p>`, false);
-  } finally {
-    resetBtn();
+  // Header
+  const labelOK = labelRes && labelRes.success;
+  const pickupOK = !wantsPickup || (pickupRes && pickupRes.success);
+  const allOK = labelOK && pickupOK;
+  html += `<h5>${allOK ? '✓' : '✗'} Repair Request Submitted${labelOK ? ' &amp; Label Generated' : ''}${wantsPickup && pickupOK ? ' &amp; Pickup Scheduled' : ''}</h5>`;
+
+  // Label section
+  if (labelOK) {
+    const labelData = labelRes.labelBase64 || '';
+    const labelFmt = (labelRes.labelFormat || 'GIF').toUpperCase();
+    const dataUri = labelFmt === 'PDF'
+      ? `data:application/pdf;base64,${labelData}`
+      : `data:image/${labelFmt.toLowerCase()};base64,${labelData}`;
+    const trk = labelRes.tracking || '(pending)';
+    html += `
+      <div style="display:flex; gap:18px; align-items:flex-start; margin: 8px 0 12px;">
+        <div style="flex-shrink:0; width: 240px; height: 240px; border:1px solid #d0d8e8; border-radius:6px; overflow:hidden; background:#f8f9fa; display:flex; align-items:center; justify-content:center;">
+          ${labelFmt === 'PDF'
+            ? `<embed src="${dataUri}" type="application/pdf" width="240" height="240" />`
+            : `<img src="${dataUri}" alt="Return Label" style="max-width:100%; max-height:100%;" />`}
+        </div>
+        <div>
+          <div style="font-size:11.5px; color:#374151;">${carrier} ${labelFmt} Return Label</div>
+          <div style="margin: 4px 0;">Tracking: <span class="prn">${trk}</span></div>
+          <div style="font-size:10.5px; color:#6c757d; margin-bottom:8px;">Bill to TSI account · ${labelRes.env}</div>
+          <a download="return-label-${trk}.${labelFmt.toLowerCase()}" href="${dataUri}" class="rrf-submit" style="text-decoration:none; font-size:11px; padding:5px 14px;"><i class="bi bi-download"></i> Download Label</a>
+        </div>
+      </div>`;
+  } else if (labelRes) {
+    html += `<div style="background:#fff5f5; border:1px solid #fecaca; border-radius:6px; padding:10px 12px; margin:8px 0;">
+      <strong>${carrier} label generation failed:</strong> ${labelRes.error || 'unknown'}
+      <pre style="font-size:10px; max-height:140px; overflow:auto; margin-top:6px;">${JSON.stringify(labelRes.fedex || labelRes.ups || labelRes, null, 2)}</pre>
+    </div>`;
   }
+
+  // Pickup section
+  if (wantsPickup) {
+    if (pickupOK) {
+      const confNum = pickupRes.prn || pickupRes.confirmationNumber || '(none)';
+      const confLabel = carrier === 'FedEx' ? 'FedEx Confirmation #' : 'UPS PRN';
+      html += `<div style="margin: 6px 0;">
+        ${confLabel}: <span class="prn">${confNum}</span> ·
+        <span style="font-size:11.5px;">${carrier} arrives <strong>${$('pickupDate').value}</strong>, <strong>${$('readyTime').value}–${$('closeTime').value}</strong></span>
+      </div>`;
+    } else if (pickupRes) {
+      html += `<div style="background:#fff5f5; border:1px solid #fecaca; border-radius:6px; padding:8px 12px; margin:6px 0;">
+        <strong>${carrier} pickup failed:</strong> ${pickupRes.error || 'unknown'} (Ops will schedule manually)
+      </div>`;
+    }
+  }
+
+  // Mock Ops email
+  const pickupLine = wantsPickup && pickupOK
+    ? `\n\nCustomer Needs Pickup Scheduled - ${carrier}.\nPickup Date: ${$('pickupDate').value}\nReady: ${$('readyTime').value} · Latest: ${$('closeTime').value}\n✓ Auto-scheduled — ${pickupRes.prn || pickupRes.confirmationNumber}`
+    : '';
+  const labelLine = labelOK ? `\n\n✓ Return label auto-generated · Tracking ${labelRes.tracking || '(pending)'}` : '';
+  html += `<hr class="rrf-divider" />
+    <div style="font-size:10.5px; color:#6c757d;"><strong>Mock email to ops-tsi@totalscopeinc.com:</strong></div>
+    <div class="rrf-mock-email">${opsEmail}${pickupLine}${labelLine}</div>`;
+
+  showResult(html, allOK);
+  resetBtn();
 }
 
 function resetBtn() {
