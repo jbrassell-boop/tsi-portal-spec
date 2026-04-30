@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Send Product In — TSI Sales Rep Portal</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", Inter, Arial, sans-serif;
+      font-size: 13px;
+      background: rgb(246, 247, 251);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      color: #000;
+    }
+
+    /* ── Sidebar (mirrors portal-contracts.html) ─────────────── */
+    .ps-sidebar {
+      width: 200px;
+      flex-shrink: 0;
+      background: rgb(255, 255, 255);
+      box-shadow: rgb(53, 67, 109) 0px 0px 15px -8px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      z-index: 10;
+    }
+    .ps-brand {
+      background: linear-gradient(135deg, rgb(17, 60, 139) 0%, rgb(53, 92, 175) 100%);
+      padding: 14px 14px 12px;
+      display: flex; flex-direction: column;
+      align-items: flex-start; gap: 4px;
+    }
+    .ps-brand-logo { height: 28px; width: auto; object-fit: contain; }
+    .ps-brand-sub {
+      font-size: 9.5px; font-weight: 600;
+      color: rgba(255,255,255,0.75);
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .ps-nav { flex: 1; overflow-y: auto; padding: 8px 8px 4px; }
+    .ps-nav-section {
+      font-size: 9px; font-weight: 700; color: #9ca3af;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      padding: 10px 10px 4px;
+    }
+    .ps-nav-section:first-child { padding-top: 4px; }
+    .ps-nav-item {
+      display: flex; align-items: center; gap: 9px;
+      width: 100%; height: 33px;
+      font-size: 11.5px; font-weight: 400; color: #374151;
+      text-decoration: none; border-radius: 5px; margin-bottom: 1px;
+      padding: 0 10px; cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+      border: none; background: transparent; text-align: left;
+    }
+    .ps-nav-item i { font-size: 13px; color: #6b7280; flex-shrink: 0; transition: color 0.12s; }
+    .ps-nav-item:hover:not(.active) { background: rgb(237, 242, 255); color: rgb(17, 60, 139); }
+    .ps-nav-item:hover:not(.active) i { color: rgb(17, 60, 139); }
+    .ps-nav-item.active {
+      background: rgb(224, 232, 255); color: rgb(17, 60, 139);
+      font-weight: 600; box-shadow: inset 3px 0 0 rgb(17, 60, 139);
+    }
+    .ps-nav-item.active i { color: rgb(17, 60, 139); }
+    .ps-nav-bottom { padding: 6px 8px 12px; border-top: 1px solid #e5e7eb; }
+
+    /* ── Main / Header (mirrors contracts) ───────────────────── */
+    .ps-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .ps-header {
+      height: 70px; flex-shrink: 0;
+      background: linear-gradient(90deg, rgb(17, 60, 139), rgb(87, 118, 227));
+      border-bottom: 1px solid rgb(182, 200, 201);
+      display: flex; align-items: center; padding: 0 20px;
+    }
+    .ps-header-left { flex: 1; color: #fff; }
+    .ps-header-left h6 { margin: 0; font-size: 16px; font-weight: 400; color: #fff; }
+    .ps-header-left h6 strong { font-weight: 700; }
+    .ps-header-center { flex: 1; display: flex; justify-content: center; align-items: center; }
+    .ps-header-center img { width: 230px; object-fit: contain; }
+    .ps-header-right { flex: 1; display: flex; justify-content: flex-end; align-items: center; }
+
+    /* ── Content area ────────────────────────────────────────── */
+    .ps-content-pad {
+      flex: 1; overflow-y: auto;
+      background: rgb(246, 247, 251);
+      padding: 16px 20px 24px;
+    }
+    .ps-page-title {
+      font-size: 18px; font-weight: 700; color: rgb(17, 60, 139);
+      margin: 0 0 4px;
+    }
+    .ps-page-sub { font-size: 12px; color: #6c757d; margin: 0 0 14px; }
+
+    .demo-tag {
+      display: inline-block;
+      background: #f59e0b; color: #fff;
+      font-size: 10px; font-weight: 700;
+      padding: 3px 8px; border-radius: 3px;
+      margin-left: 8px; vertical-align: middle;
+    }
+
+    /* ── Form card ───────────────────────────────────────────── */
+    .rrf-card {
+      background: #fff;
+      border: 1px solid #d0d8e8;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      padding: 18px 22px 20px;
+      max-width: 1100px;
+    }
+
+    .rrf-section-head {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: rgb(17, 60, 139);
+      padding-bottom: 6px;
+      border-bottom: 1px solid #e0e6ef;
+      margin-bottom: 10px;
+    }
+    .rrf-section-head i { font-size: 12px; }
+
+    .rrf-row { display: grid; grid-template-columns: 130px 1fr 130px 1fr; gap: 8px 10px; align-items: center; margin-bottom: 8px; }
+    .rrf-row label { font-size: 11.5px; font-weight: 600; color: #495057; text-align: right; }
+    .rrf-row input[type=text], .rrf-row input[type=date], .rrf-row input[type=time], .rrf-row input[type=number],
+    .rrf-row input:not([type]), .rrf-row select, .rrf-row textarea {
+      font-size: 12px; padding: 4px 8px; height: 30px;
+      border: 1px solid #ced4da; border-radius: 4px; width: 100%;
+      background: #fff; color: #111;
+      transition: border-color 0.12s, box-shadow 0.12s;
+    }
+    .rrf-row input:focus, .rrf-row select:focus, .rrf-row textarea:focus {
+      outline: 0; border-color: rgb(87, 118, 227);
+      box-shadow: 0 0 0 2px rgba(87,118,227,0.15);
+    }
+    .rrf-textarea { display: grid; grid-template-columns: 130px 1fr; gap: 10px; align-items: start; margin-bottom: 8px; }
+    .rrf-textarea label { font-size: 11.5px; font-weight: 600; color: #495057; text-align: right; padding-top: 6px; }
+    .rrf-textarea textarea { font-size: 12px; padding: 6px 8px; min-height: 50px; border: 1px solid #ced4da; border-radius: 4px; width: 100%; resize: vertical; }
+
+    .rrf-warn {
+      background: #fff5f5; border: 2px solid #c0392b; color: #8b0000;
+      text-align: center; font-weight: 700; font-size: 12px;
+      padding: 7px 12px; border-radius: 5px; margin: 10px 0 14px;
+    }
+
+    /* Three-question row */
+    .rrf-questions {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;
+      background: #f8faff; padding: 10px 12px; border-radius: 6px;
+      border: 1px solid #e0e6ef; margin-bottom: 10px;
+    }
+    .rrf-q { font-size: 11.5px; }
+    .rrf-q-label { font-weight: 600; color: #495057; margin-bottom: 4px; }
+    .rrf-q label { margin-right: 12px; font-weight: 400; cursor: pointer; }
+    .rrf-q input[type=radio] { margin-right: 4px; vertical-align: middle; }
+
+    /* Pickup toggle + section */
+    .rrf-pickup-toggle {
+      background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px;
+      padding: 9px 14px; margin: 10px 0 8px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .rrf-pickup-toggle label.tog { font-size: 13px; font-weight: 700; cursor: pointer; color: rgb(17,60,139); }
+    .rrf-pickup-toggle .note { font-size: 10.5px; color: #6c757d; margin-left: auto; }
+
+    .rrf-pickup-row {
+      background: #e7f3ff; border: 1px solid #b3d4ff; border-radius: 6px;
+      padding: 12px 14px; margin-bottom: 12px;
+    }
+    .rrf-pickup-grid {
+      display: grid; grid-template-columns: 80px 1fr 90px 1fr 80px 1fr 80px 1fr; gap: 6px 10px;
+      align-items: center;
+    }
+    .rrf-pickup-grid label { font-size: 11px; font-weight: 600; color: #1d3a78; text-align: right; }
+    .rrf-pickup-grid input, .rrf-pickup-grid select {
+      font-size: 12px; padding: 3px 6px; height: 28px;
+      border: 1px solid #b3d4ff; border-radius: 4px; width: 100%; background: #fff;
+    }
+    .rrf-pickup-grid2 { display: grid; grid-template-columns: 80px 100px 80px 80px 100px 1fr; gap: 6px 10px; align-items: center; margin-top: 8px; }
+    .rrf-pickup-grid2 label { font-size: 11px; font-weight: 600; color: #1d3a78; text-align: right; }
+    .rrf-pickup-grid2 input { font-size: 12px; padding: 3px 6px; height: 28px; border: 1px solid #b3d4ff; border-radius: 4px; width: 100%; background: #fff; }
+
+    /* Submit */
+    .rrf-actions { display: flex; justify-content: center; padding-top: 8px; }
+    .rrf-submit {
+      background: linear-gradient(90deg, rgb(17, 60, 139), rgb(87, 118, 227));
+      color: #fff; border: 0;
+      padding: 9px 36px; font-size: 13px; font-weight: 600;
+      border-radius: 5px; cursor: pointer;
+      transition: filter 0.15s, transform 0.1s, box-shadow 0.15s;
+    }
+    .rrf-submit:hover { filter: brightness(1.07); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(17,60,139,0.25); }
+    .rrf-submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* Result */
+    .rrf-result {
+      max-width: 1100px; margin-top: 16px;
+      background: #fff; border: 1px solid #d0d8e8; border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      padding: 18px 22px;
+      border-top: 4px solid #16a34a;
+    }
+    .rrf-result.fail { border-top-color: #b71234; }
+    .rrf-result h5 { margin: 0 0 6px; font-size: 15px; color: rgb(17,60,139); }
+    .rrf-result .prn {
+      font-family: ui-monospace, "SF Mono", Consolas, monospace;
+      background: #eef2ff; color: #1e3a8a;
+      padding: 3px 10px; border-radius: 4px; font-weight: 700;
+      font-size: 14px; display: inline-block;
+    }
+    .rrf-mock-email {
+      font-family: ui-monospace, "SF Mono", Consolas, monospace;
+      font-size: 11px; background: #f8f9fa; padding: 10px 12px;
+      border-radius: 4px; white-space: pre-wrap; color: #374151;
+      margin-top: 10px; line-height: 1.55;
+    }
+    .rrf-divider { border: 0; border-top: 1px dashed #dee2e6; margin: 12px 0; }
+  </style>
+</head>
+<body>
+
+  <!-- ══ Sidebar ════════════════════════════════════════════════ -->
+  <aside class="ps-sidebar">
+    <div class="ps-brand">
+      <img class="ps-brand-logo" src="assets/logo-white.png" alt="TSI">
+      <span class="ps-brand-sub">Sales Rep Portal</span>
+    </div>
+
+    <nav class="ps-nav">
+      <div class="ps-nav-section">Repairs</div>
+      <a class="ps-nav-item" href="#"><i class="bi bi-wrench-adjustable"></i> Open Repair List</a>
+      <a class="ps-nav-item" href="#"><i class="bi bi-check2-all"></i> Closed Repair List</a>
+
+      <div class="ps-nav-section">Orders</div>
+      <a class="ps-nav-item" href="#"><i class="bi bi-cart3"></i> Product Sales</a>
+      <a class="ps-nav-item" href="#"><i class="bi bi-geo-alt"></i> Site Services</a>
+      <a class="ps-nav-item" href="#"><i class="bi bi-box-seam"></i> Outstanding Loaners</a>
+      <a class="ps-nav-item active" href="portal-send-product-in.html"><i class="bi bi-box-arrow-in-right"></i> Send Product In</a>
+
+      <div class="ps-nav-section">Accounts</div>
+      <a class="ps-nav-item" href="#"><i class="bi bi-hospital"></i> Client List</a>
+      <a class="ps-nav-item" href="#"><i class="bi bi-receipt"></i> Receivables</a>
+      <a class="ps-nav-item" href="#"><i class="bi bi-bar-chart-line"></i> Sales Reports</a>
+      <a class="ps-nav-item" href="portal-contracts.html"><i class="bi bi-file-earmark-text"></i> Contracts</a>
+    </nav>
+
+    <div class="ps-nav-bottom">
+      <a class="ps-nav-item" href="#"><i class="bi bi-lock"></i> Change Password</a>
+      <a class="ps-nav-item" href="#"><i class="bi bi-power"></i> Sign Out</a>
+    </div>
+  </aside>
+
+  <!-- ══ Main ═══════════════════════════════════════════════════ -->
+  <div class="ps-main">
+
+    <header class="ps-header">
+      <div class="ps-header-left">
+        <h6>Welcome, <strong>Debbie</strong></h6>
+      </div>
+      <div class="ps-header-center">
+        <img src="assets/logo-white.png" alt="TSI">
+      </div>
+      <div class="ps-header-right"></div>
+    </header>
+
+    <div class="ps-content-pad">
+
+      <h2 class="ps-page-title">
+        <i class="bi bi-box-arrow-in-right"></i> Send Product In
+        <span class="demo-tag">UPS Pickup wired live (CIE)</span>
+      </h2>
+      <p class="ps-page-sub">
+        Submit a scope or instrument for repair. If you check
+        <em>"I Need Pickup Scheduled"</em>, UPS will be auto-dispatched to the
+        return address — billed to TSI's shipper account.
+      </p>
+
+      <div class="rrf-card">
+
+        <!-- ── RETURN TO ─────────────────────────────────────── -->
+        <div class="rrf-section-head"><i class="bi bi-geo-alt"></i> Return To</div>
+
+        <div class="rrf-row">
+          <label>Address Line 1:</label>
+          <input id="address1" value="498 N Wiget Ln" />
+          <label>Email Address:</label>
+          <input id="emailAddress" value="admin@shadelandsendo.com" />
+        </div>
+        <div class="rrf-row">
+          <label>Address Line 2:</label>
+          <input id="address2" value="" />
+          <label>Phone Number:</label>
+          <input id="phone" value="(925) 933-3600" />
+        </div>
+        <div class="rrf-row">
+          <label>City:</label>
+          <input id="city" value="Walnut Creek" />
+          <label>Model:</label>
+          <input id="model" value="GIF-H190" />
+        </div>
+        <div class="rrf-row">
+          <label>State:</label>
+          <input id="state" maxlength="2" value="CA" style="max-width:80px;" />
+          <label>Serial Number:</label>
+          <input id="serial" value="2312451" />
+        </div>
+        <div class="rrf-row">
+          <label>Zip Code:</label>
+          <input id="zip" maxlength="10" value="94598" style="max-width:120px;" />
+          <label></label><span></span>
+        </div>
+
+        <!-- ── PROBLEM ───────────────────────────────────────── -->
+        <div class="rrf-section-head" style="margin-top:14px;"><i class="bi bi-exclamation-circle"></i> Customer Perceived Problem</div>
+        <div class="rrf-textarea">
+          <label>Problem:</label>
+          <textarea id="problem" rows="2">Image problem, sometimes it works and sometimes it does not. It will work for a day or two then the image will have issues.</textarea>
+        </div>
+
+        <div class="rrf-warn">
+          ⚠ ALL PRODUCTS NEED TO BE PROPERLY DISINFECTED PRIOR TO SHIPMENT!
+        </div>
+
+        <!-- ── HOSPITAL ──────────────────────────────────────── -->
+        <div class="rrf-section-head"><i class="bi bi-hospital"></i> Hospital &amp; Contact</div>
+        <div class="rrf-row">
+          <label>Hospital:</label>
+          <input id="hospital" value="Shadelands Advanced Endoscopy" />
+          <label>Department:</label>
+          <input id="department" value="Endoscopy" />
+        </div>
+        <div class="rrf-row">
+          <label>Name of Contact:</label>
+          <input id="contactName" value="Rosa C." />
+          <label>Purchase Order #:</label>
+          <input id="po" value="" />
+        </div>
+
+        <!-- ── QUESTIONS ─────────────────────────────────────── -->
+        <div class="rrf-questions">
+          <div class="rrf-q">
+            <div class="rrf-q-label">Did the failure occur during a case?</div>
+            <label><input type="radio" name="failure" value="Yes" checked /> Yes</label>
+            <label><input type="radio" name="failure" value="No" /> No</label>
+          </div>
+          <div class="rrf-q">
+            <div class="rrf-q-label">Has this scope been cleaned and disinfected?</div>
+            <label><input type="radio" name="cleaned" value="Yes" checked /> Yes</label>
+            <label><input type="radio" name="cleaned" value="No" /> No</label>
+          </div>
+          <div class="rrf-q">
+            <div class="rrf-q-label">How would you like to receive your quote?</div>
+            <label><input type="radio" name="quoteVia" value="Email" checked /> Email</label>
+            <label><input type="radio" name="quoteVia" value="Phone" /> Phone</label>
+          </div>
+        </div>
+
+        <!-- ── PICKUP ────────────────────────────────────────── -->
+        <div class="rrf-pickup-toggle">
+          <input type="checkbox" id="pickupNeeded" checked onchange="togglePickup()" style="transform:scale(1.15);" />
+          <label class="tog" for="pickupNeeded"><i class="bi bi-truck"></i> I Need Pickup Scheduled</label>
+          <span class="note">Bills to TSI's UPS shipper account · all packages routed to TSI facility</span>
+        </div>
+
+        <div id="pickupBlock" class="rrf-pickup-row">
+          <div class="rrf-pickup-grid">
+            <label>Carrier:</label>
+            <select id="carrier">
+              <option value="UPS" selected>UPS</option>
+              <option value="FedEx">FedEx (manual)</option>
+            </select>
+            <label>Pickup Date:</label>
+            <input id="pickupDate" type="date" />
+            <label>Ready:</label>
+            <input id="readyTime" type="time" value="08:00" />
+            <label>Latest:</label>
+            <input id="closeTime" type="time" value="14:00" />
+          </div>
+          <div class="rrf-pickup-grid2">
+            <label>Weight (lbs):</label>
+            <input id="weightLbs" type="number" value="10" min="1" />
+            <label>Pkgs:</label>
+            <input id="packageCount" type="number" value="1" min="1" />
+            <label>Special:</label>
+            <input id="specialInstruction" maxlength="90" placeholder="(auto-filled from Model + Serial)" />
+          </div>
+        </div>
+
+        <!-- ── SUBMIT ────────────────────────────────────────── -->
+        <div class="rrf-actions">
+          <button id="btnSubmit" class="rrf-submit" onclick="submitRequest()">
+            <i class="bi bi-send"></i> Submit Request
+          </button>
+        </div>
+      </div>
+
+      <!-- Result panel -->
+      <div id="resultArea" style="display:none;"></div>
+
+    </div>
+  </div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+$('pickupDate').value = (() => {
+  const d = new Date(); d.setDate(d.getDate() + 1);
+  return d.toISOString().slice(0, 10);
+})();
+
+function togglePickup() {
+  $('pickupBlock').style.display = $('pickupNeeded').checked ? '' : 'none';
+}
+
+function radioVal(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return el ? el.value : '';
+}
+
+function specialInstructionAuto() {
+  const v = $('specialInstruction').value.trim();
+  if (v) return v;
+  return `${$('model').value} SN ${$('serial').value} - TSI Repair RMA`.slice(0, 90);
+}
+
+function showResult(html, ok) {
+  const a = $('resultArea');
+  a.style.display = '';
+  a.innerHTML = `<div class="rrf-result ${ok ? '' : 'fail'}">${html}</div>`;
+  a.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function buildOpsEmail() {
+  return [
+    `Hospital: ${$('hospital').value}`,
+    `Department: ${$('department').value}`,
+    `Contact: ${$('contactName').value}`,
+    ``,
+    `Model #: ${$('model').value}`,
+    `Serial #: ${$('serial').value}`,
+    `Purchase Order #: ${$('po').value || '(none)'}`,
+    ``,
+    `Customer Perceived Problem:`,
+    $('problem').value,
+    ``,
+    `Return Address:`,
+    $('address1').value,
+    `${$('city').value.toUpperCase()}, ${$('state').value} ${$('zip').value}`,
+    ``,
+    `Did the failure occur during a case - ${radioVal('failure')}`,
+    `Has this scope been cleaned and disinfected prior to shipment - ${radioVal('cleaned')}`,
+    `Customer would like to receive quote via: ${radioVal('quoteVia')}`,
+    ``,
+    `Email Address: ${$('emailAddress').value}`,
+    `Phone Number: ${$('phone').value}`
+  ].join('\n');
+}
+
+async function submitRequest() {
+  $('btnSubmit').disabled = true;
+  $('btnSubmit').innerHTML = '<i class="bi bi-hourglass-split"></i> Submitting…';
+
+  const wantsPickup = $('pickupNeeded').checked;
+  const carrier = $('carrier').value;
+  const opsEmail = buildOpsEmail();
+
+  if (!wantsPickup) {
+    showResult(`
+      <h5>✓ Repair Request Submitted</h5>
+      <p style="font-size:12px; color:#374151;">Your request was sent to Total Scope Operations. You'll receive a quote via the method you selected.</p>
+      <hr class="rrf-divider" />
+      <div style="font-size:10.5px; color:#6c757d;"><strong>Mock email to ops-tsi@totalscopeinc.com:</strong></div>
+      <div class="rrf-mock-email">${opsEmail}</div>
+    `, true);
+    resetBtn();
+    return;
+  }
+
+  if (carrier === 'FedEx') {
+    showResult(`
+      <h5>✓ Repair Request Submitted (FedEx pickup manual)</h5>
+      <p style="font-size:12px; color:#374151;">FedEx auto-dispatch is not yet wired. Operations will schedule the pickup manually.</p>
+      <hr class="rrf-divider" />
+      <div style="font-size:10.5px; color:#6c757d;"><strong>Mock email to ops-tsi@totalscopeinc.com:</strong></div>
+      <div class="rrf-mock-email">${opsEmail}\n\nCustomer Needs Pickup Scheduled - FedEx.\nPickup Date: ${$('pickupDate').value}\nLatest Pickup Time: ${$('closeTime').value}</div>
+    `, true);
+    resetBtn();
+    return;
+  }
+
+  // UPS — call the live API
+  const payload = {
+    companyName: $('hospital').value,
+    contactName: $('contactName').value,
+    phone: $('phone').value,
+    address1: $('address1').value,
+    address2: $('address2').value,
+    city: $('city').value,
+    state: $('state').value,
+    zip: $('zip').value,
+    pickupDate: $('pickupDate').value,
+    readyTime: $('readyTime').value,
+    closeTime: $('closeTime').value,
+    packageCount: Number($('packageCount').value) || 1,
+    weightLbs: Number($('weightLbs').value) || 10,
+    specialInstruction: specialInstructionAuto(),
+    residential: false
+  };
+
+  try {
+    const r = await fetch('/api/pickup/schedule', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const j = await r.json();
+
+    if (j.success) {
+      showResult(`
+        <h5>✓ Repair Request Submitted &amp; UPS Pickup Scheduled</h5>
+        <p style="font-size:12px;">UPS Pickup Request Number: <span class="prn">${j.prn}</span></p>
+        <p style="font-size:12px; color:#374151;">UPS will arrive at <strong>${$('address1').value}, ${$('city').value}</strong> on
+          <strong>${$('pickupDate').value}</strong> between
+          <strong>${$('readyTime').value}</strong> and <strong>${$('closeTime').value}</strong>.
+          <span style="font-size:10.5px; color:#6c757d;">(env: ${j.env})</span>
+        </p>
+        <hr class="rrf-divider" />
+        <div style="font-size:10.5px; color:#6c757d;"><strong>Mock email to ops-tsi@totalscopeinc.com:</strong></div>
+        <div class="rrf-mock-email">${opsEmail}\n\nCustomer Needs Pickup Scheduled - UPS.\nPickup Date: ${$('pickupDate').value}\nReady Time: ${$('readyTime').value}\nLatest Pickup Time: ${$('closeTime').value}\n\n✓ Auto-scheduled with UPS — PRN ${j.prn}</div>
+      `, true);
+    } else {
+      showResult(`
+        <h5>✗ Repair Request submitted, but UPS Pickup failed</h5>
+        <p style="font-size:12px;">The repair request itself was sent to Ops. Operations will schedule the pickup manually.</p>
+        <p style="font-size:12px;"><strong>UPS error:</strong> ${j.error}</p>
+        <pre style="font-size:10.5px; background:#fff5f5; padding:10px; border-radius:4px; max-height:240px; overflow:auto;">${JSON.stringify(j.ups || j, null, 2)}</pre>
+      `, false);
+    }
+  } catch (e) {
+    showResult(`<h5>✗ Network error</h5><p>${e.message}</p>`, false);
+  } finally {
+    resetBtn();
+  }
+}
+
+function resetBtn() {
+  $('btnSubmit').disabled = false;
+  $('btnSubmit').innerHTML = '<i class="bi bi-send"></i> Submit Request';
+}
+</script>
+</body>
+</html>

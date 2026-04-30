@@ -972,7 +972,7 @@
       <a class="ps-nav-item" href="#"><i class="bi bi-cart3"></i> Product Sales</a>
       <a class="ps-nav-item" href="#"><i class="bi bi-geo-alt"></i> Site Services</a>
       <a class="ps-nav-item" href="#"><i class="bi bi-box-seam"></i> Outstanding Loaners</a>
-      <a class="ps-nav-item" href="#"><i class="bi bi-box-arrow-in-right"></i> Send Product In</a>
+      <a class="ps-nav-item" href="portal-send-product-in.html"><i class="bi bi-box-arrow-in-right"></i> Send Product In</a>
 
       <div class="ps-nav-section">Accounts</div>
       <a class="ps-nav-item" href="#"><i class="bi bi-hospital"></i> Client List</a>
@@ -1298,7 +1298,7 @@
     };
 
     const totalValue   = contract.dblAmtContract || 0;
-    const totalCharges = repairs.reduce((s, r) => s + (r.nStickerCost || r.dblAmtRepair || 0), 0);
+    const totalCharges = repairs.reduce((s, r) => s + (r.nConsumption || r.dblAmtRepair || 0), 0);
     const pct          = totalValue > 0 ? Math.min(100, Math.round(totalCharges / totalValue * 100)) : 0;
     const daysLeft     = Math.max(0, Math.round((new Date(contract.dtDateTermination) - new Date()) / 86400000));
     const totalScopes  = scopeCounts.F + scopeCounts.R + scopeCounts.C + scopeCounts.I;
