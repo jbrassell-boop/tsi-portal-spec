@@ -17,6 +17,9 @@ const HOST = ENV === 'PRODUCTION'
   ? 'https://onlinetools.ups.com'
   : 'https://wwwcie.ups.com';
 
+// UPS Pickup On-Call API version. Override via env if UPS publishes a new one.
+const PICKUP_VER = process.env.UPS_PICKUP_VERSION || 'v1607';
+
 const CLIENT_ID     = process.env.UPS_CLIENT_ID     || '';
 const CLIENT_SECRET = process.env.UPS_CLIENT_SECRET || '';
 const ACCOUNT       = process.env.UPS_ACCOUNT_NUMBER || '';
@@ -126,7 +129,7 @@ router.post('/schedule', async (req, res) => {
     const payload = buildPayload(p);
 
     const transId = 'tsi-' + Date.now();
-    const upsRes = await fetch(`${HOST}/api/shipments/v2403/pickup`, {
+    const upsRes = await fetch(`${HOST}/api/shipments/${PICKUP_VER}/pickup`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -170,6 +173,7 @@ router.get('/health', async (req, res) => {
   const status = {
     env: ENV,
     host: HOST,
+    pickupVersion: PICKUP_VER,
     hasClientId: !!CLIENT_ID,
     hasClientSecret: !!CLIENT_SECRET,
     hasAccount: !!ACCOUNT,
