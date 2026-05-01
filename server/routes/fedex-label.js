@@ -25,16 +25,17 @@ const ACCOUNT       = process.env.FEDEX_ACCOUNT_NUMBER || '';
 // TSI receives M-F only
 const BUSINESS_DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI'];
 
-// Service preference, cheapest → most expensive (next-business-day options).
-// FedEx serviceType strings used by both Rate API and Ship API.
+// Service preference per Joe's rule (2026-04-30):
+//   "If Ground gets it there next biz day → Ground.
+//    Otherwise next-day air."
+// For FedEx that means: FEDEX_GROUND (or GROUND_HOME_DELIVERY for residential)
+// → STANDARD_OVERNIGHT (cheapest next-day air; equivalent to UPS Saver).
+// Drops FEDEX_EXPRESS_SAVER (3-day), FEDEX_2_DAY, PRIORITY_OVERNIGHT,
+// FIRST_OVERNIGHT — same delivery as Standard but more expensive.
 const SERVICE_RANK = [
-  { type: 'FEDEX_GROUND',                name: 'FedEx Ground' },
-  { type: 'GROUND_HOME_DELIVERY',        name: 'FedEx Home Delivery' },   // residential ground
-  { type: 'FEDEX_EXPRESS_SAVER',         name: 'FedEx Express Saver' },   // 3-day, only useful if shipDate gives 1 biz-day
-  { type: 'FEDEX_2_DAY',                 name: 'FedEx 2Day' },
-  { type: 'STANDARD_OVERNIGHT',          name: 'FedEx Standard Overnight' },
-  { type: 'PRIORITY_OVERNIGHT',          name: 'FedEx Priority Overnight' },
-  { type: 'FIRST_OVERNIGHT',             name: 'FedEx First Overnight' }
+  { type: 'FEDEX_GROUND',         name: 'FedEx Ground' },
+  { type: 'GROUND_HOME_DELIVERY', name: 'FedEx Home Delivery' },   // residential ground
+  { type: 'STANDARD_OVERNIGHT',   name: 'FedEx Standard Overnight' }
 ];
 const FALLBACK_SERVICE = { type: 'STANDARD_OVERNIGHT', name: 'FedEx Standard Overnight' };
 
