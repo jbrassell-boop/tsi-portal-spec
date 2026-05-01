@@ -23,14 +23,13 @@ const SHIP_VER = process.env.UPS_SHIP_VERSION || 'v2403';
 // TSI receives M-F only (Joe confirmed: no Saturday processing)
 const BUSINESS_DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI'];
 
-// Service preference, cheapest → most expensive (next-business-day options).
-// serviceLevel from TransitTimes API → numeric Service.Code in Ship API.
-// Ground is cheapest (~$10) but only works for short-haul routes.
+// Service preference per Joe's rule (2026-04-30):
+//   "If Ground gets it there next biz day → Ground.
+//    Otherwise Next Day Air Saver."
+// No 1DA / 1DM (they're more expensive than Saver with same next-day delivery).
 const SERVICE_RANK = [
   { level: 'GND', code: '03', name: 'UPS Ground' },
-  { level: '1DP', code: '13', name: 'UPS Next Day Air Saver' },
-  { level: '1DA', code: '01', name: 'UPS Next Day Air' },
-  { level: '1DM', code: '14', name: 'UPS Next Day Air Early' }
+  { level: '1DP', code: '13', name: 'UPS Next Day Air Saver' }
 ];
 const FALLBACK_SERVICE = SERVICE_RANK[1];   // Saver — works coast-to-coast
 
@@ -170,22 +169,21 @@ function tsiAddressBlock(fac) {
 
 // ── Build UPS Shipment Request payload ─────────────────
 //
-// IMPORTANT: UPS's ReturnService Code 9 ("1-Attempt Print Return Label" — inline
-// label in response) is ONLY valid with UPS Ground (Service Code 03). Air
-// services (1DA / 1DP / 1DM) reject Return Service Code 9 with error 121040
-// "Return Services are unavailable with the requested service."
+// Architecture: customer ships to TSI, TSI pays via third-party billing.
+// We do NOT use ReturnService — that's a UPS billing flag whose Code 9
+// (inline-print) is restricted to Ground only. Third-party billing lets
+// the dynamic picker freely choose Ground or Saver air based on
+// next-business-day Time-in-Transit, and TSI's account is still charged.
 //
-// For now, return labels are pinned to GROUND. Customers far from TSI accept
-// 4-5 day transit. If they need faster, Ops schedules a UPS pickup separately
-// (the UPS driver brings the air-service label).
-//
-// Future option (PR 2/3): use ReturnService Code 8 (Electronic Return Label)
-// + LabelDelivery block for far-distance customers; customer gets emailed link.
+//   Shipper      = customer (origin party of record)
+//   ShipFrom     = customer (pickup address)
+//   ShipTo       = TSI facility (PA or TN)
+//   Payment.Type = "02" (Bill Third Party)
+//   Payment.BillThirdParty.AccountNumber = TSI's UPS account
 function buildPayload(p, picked) {
   const fac = getFacility(p);
   const TSI_ADDRESS = tsiAddressBlock(fac);
-  // Force Ground for return labels regardless of dynamic-picker recommendation.
-  const svc = { code: '03', name: 'UPS Ground' };
+  const svc = picked || FALLBACK_SERVICE;
   // Customer info — they're the "ShipFrom" (where pickup happens) on a return
   const phoneDigits = (p.phone || '').replace(/[^\d]/g, '');
   // UPS limits: Name 35, but probed 27 char limit on Pickup CompanyName.
@@ -211,16 +209,24 @@ function buildPayload(p, picked) {
       },
       Shipment: {
         Description: (p.description || 'TSI Repair RMA').slice(0, 35),
-        // ReturnService 9 = "1 Attempt Print Return Label" — label returned
-        // inline as base64 in the response (no email to customer)
-        ReturnService: { Code: '9' },
-        Shipper: TSI_ADDRESS,           // who pays + label-of-record
-        ShipFrom: customer,             // customer's address (pickup point)
-        ShipTo:   TSI_ADDRESS,          // TSI = recipient on return
+        // Customer = Shipper of record. TSI = recipient. TSI pays via
+        // third-party billing (Type 02). No ReturnService block — that's
+        // a billing-report flag whose inline-print Code 9 is Ground-only.
+        // Third-party billing lets the dynamic picker freely choose Ground
+        // (next-day in-zone) or Saver air (next-day far-zone).
+        Shipper: customer,              // customer is shipper of record
+        ShipFrom: customer,             // pickup happens at customer's address
+        ShipTo:   TSI_ADDRESS,          // TSI receives
         PaymentInformation: {
           ShipmentCharge: {
-            Type: '01',
-            BillShipper: { AccountNumber: fac.account }
+            Type: '02',                 // Bill Third Party
+            BillThirdParty: {
+              AccountNumber: fac.account,
+              Address: {
+                PostalCode: TSI_ADDRESS.Address.PostalCode,
+                CountryCode: 'US'
+              }
+            }
           }
         },
         Service: { Code: svc.code, Description: svc.name },
@@ -294,10 +300,7 @@ router.post('/generate', async (req, res) => {
       labelFormat: (label.ImageFormat || {}).Code || null,
       labelBase64: label.GraphicImage || null,
       labelHtmlBase64: label.HTMLImage || null,
-      // UPS return labels are pinned to Ground (see buildPayload comment).
-      // Surface what the dynamic picker WOULD have chosen for non-return shipments.
-      service: { code: '03', name: 'UPS Ground', level: 'GND' },
-      pickerSuggestion: picked || null,
+      service: picked || { ...FALLBACK_SERVICE, deliveryDate: null, deliveryDayOfWeek: null, fallback: true },
       ups: { transactionId: (r.Response || {}).TransactionReference }
     });
   } catch (err) {
