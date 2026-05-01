@@ -351,6 +351,18 @@
           <label></label><span></span>
         </div>
 
+        <!-- ── CARRIER + WEIGHT (always required, up front) ─── -->
+        <div class="rrf-section-head" style="margin-top:14px;"><i class="bi bi-truck"></i> Shipping</div>
+        <div class="rrf-row">
+          <label>Carrier:</label>
+          <select id="carrier" style="font-size:12px; padding:4px 8px; height:30px; border:1px solid #ced4da; border-radius:4px; width:100%;">
+            <option value="UPS" selected>UPS</option>
+            <option value="FedEx">FedEx</option>
+          </select>
+          <label>Package Weight (lbs):</label>
+          <input id="weightLbs" type="number" value="10" min="1" />
+        </div>
+
         <!-- ── QUESTIONS ─────────────────────────────────────── -->
         <div class="rrf-questions">
           <div class="rrf-q">
@@ -370,32 +382,25 @@
           </div>
         </div>
 
-        <!-- ── PICKUP ────────────────────────────────────────── -->
+        <!-- ── PICKUP (OPTIONAL) ─────────────────────────────── -->
         <div class="rrf-pickup-toggle">
-          <input type="checkbox" id="pickupNeeded" checked onchange="togglePickup()" style="transform:scale(1.15);" />
-          <label class="tog" for="pickupNeeded"><i class="bi bi-truck"></i> I Need Pickup Scheduled</label>
-          <span class="note">Bills to TSI's UPS shipper account · all packages routed to TSI facility</span>
+          <input type="checkbox" id="pickupNeeded" onchange="togglePickup()" style="transform:scale(1.15);" />
+          <label class="tog" for="pickupNeeded"><i class="bi bi-truck"></i> Need TSI to schedule a pickup at your location?</label>
+          <span class="note">Otherwise drop the labeled package at any UPS Store / FedEx Office, or hand to your regular driver.</span>
         </div>
 
-        <div id="pickupBlock" class="rrf-pickup-row">
+        <div id="pickupBlock" class="rrf-pickup-row" style="display:none;">
           <div class="rrf-pickup-grid">
-            <label>Carrier:</label>
-            <select id="carrier">
-              <option value="UPS" selected>UPS</option>
-              <option value="FedEx">FedEx</option>
-            </select>
-            <label>Pickup Date:</label>
-            <input id="pickupDate" type="date" />
-            <label>Ready:</label>
-            <input id="readyTime" type="time" value="08:00" />
-            <label>Latest:</label>
-            <input id="closeTime" type="time" value="14:00" />
+            <label style="grid-column:1/2;">Pickup Date:</label>
+            <input id="pickupDate" type="date" style="grid-column:2/3;" />
+            <label style="grid-column:3/4;">Ready:</label>
+            <input id="readyTime" type="time" value="08:00" style="grid-column:4/5;" />
+            <label style="grid-column:5/6;">Latest:</label>
+            <input id="closeTime" type="time" value="14:00" style="grid-column:6/7;" />
+            <label style="grid-column:7/8;">Pkgs:</label>
+            <input id="packageCount" type="number" value="1" min="1" style="grid-column:8/9;" />
           </div>
-          <div class="rrf-pickup-grid2">
-            <label>Weight (lbs):</label>
-            <input id="weightLbs" type="number" value="10" min="1" />
-            <label>Pkgs:</label>
-            <input id="packageCount" type="number" value="1" min="1" />
+          <div class="rrf-pickup-grid2" style="grid-template-columns: 80px 1fr;">
             <label>Special:</label>
             <input id="specialInstruction" maxlength="90" placeholder="(auto-filled from Model + Serial)" />
           </div>
@@ -524,8 +529,12 @@ async function submitRequest() {
   // Label section
   if (labelOK) {
     const labelData = labelRes.labelBase64 || '';
-    const labelFmt = (labelRes.labelFormat || 'GIF').toUpperCase();
-    const dataUri = labelFmt === 'PDF'
+    const rawFmt = (labelRes.labelFormat || 'GIF').toUpperCase();
+    // UPS returns 'GIF', FedEx returns 'LABEL' (which is just PDF when we requested PDF).
+    // Normalize to a real MIME family.
+    const isPdf = rawFmt === 'PDF' || rawFmt === 'LABEL';
+    const labelFmt = isPdf ? 'PDF' : rawFmt;
+    const dataUri = isPdf
       ? `data:application/pdf;base64,${labelData}`
       : `data:image/${labelFmt.toLowerCase()};base64,${labelData}`;
     const trk = labelRes.tracking || '(pending)';

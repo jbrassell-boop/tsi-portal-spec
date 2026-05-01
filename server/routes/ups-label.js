@@ -169,10 +169,23 @@ function tsiAddressBlock(fac) {
 }
 
 // ── Build UPS Shipment Request payload ─────────────────
+//
+// IMPORTANT: UPS's ReturnService Code 9 ("1-Attempt Print Return Label" — inline
+// label in response) is ONLY valid with UPS Ground (Service Code 03). Air
+// services (1DA / 1DP / 1DM) reject Return Service Code 9 with error 121040
+// "Return Services are unavailable with the requested service."
+//
+// For now, return labels are pinned to GROUND. Customers far from TSI accept
+// 4-5 day transit. If they need faster, Ops schedules a UPS pickup separately
+// (the UPS driver brings the air-service label).
+//
+// Future option (PR 2/3): use ReturnService Code 8 (Electronic Return Label)
+// + LabelDelivery block for far-distance customers; customer gets emailed link.
 function buildPayload(p, picked) {
-  const svc = picked || FALLBACK_SERVICE;
   const fac = getFacility(p);
   const TSI_ADDRESS = tsiAddressBlock(fac);
+  // Force Ground for return labels regardless of dynamic-picker recommendation.
+  const svc = { code: '03', name: 'UPS Ground' };
   // Customer info — they're the "ShipFrom" (where pickup happens) on a return
   const phoneDigits = (p.phone || '').replace(/[^\d]/g, '');
   // UPS limits: Name 35, but probed 27 char limit on Pickup CompanyName.
@@ -281,7 +294,10 @@ router.post('/generate', async (req, res) => {
       labelFormat: (label.ImageFormat || {}).Code || null,
       labelBase64: label.GraphicImage || null,
       labelHtmlBase64: label.HTMLImage || null,
-      service: picked || { ...FALLBACK_SERVICE, deliveryDate: null, deliveryDayOfWeek: null, fallback: true },
+      // UPS return labels are pinned to Ground (see buildPayload comment).
+      // Surface what the dynamic picker WOULD have chosen for non-return shipments.
+      service: { code: '03', name: 'UPS Ground', level: 'GND' },
+      pickerSuggestion: picked || null,
       ups: { transactionId: (r.Response || {}).TransactionReference }
     });
   } catch (err) {
