@@ -65,11 +65,12 @@ async function getToken() {
 // ── Pick fastest+cheapest service via Rate Quotes API ──
 async function pickService(token, p) {
   const today = new Date().toISOString().slice(0, 10);
+  const fac = getFacility(p);
   const body = {
     accountNumber: { value: ACCOUNT },
     requestedShipment: {
       shipper: { address: { postalCode: (p.zip || '').slice(0, 5), countryCode: 'US' } },
-      recipient: { address: { postalCode: '19061', countryCode: 'US' } },
+      recipient: { address: { postalCode: fac.zip, countryCode: 'US' } },
       shipDateStamp: today,
       pickupType: 'USE_SCHEDULED_PICKUP',
       rateRequestType: ['LIST'],
@@ -128,24 +129,53 @@ async function pickService(token, p) {
   }
 }
 
-// TSI's facility — recipient of all return labels
-const TSI_RECIPIENT = {
-  contact: {
-    personName: 'Receiving Dept',
-    phoneNumber: '8004712255',
-    companyName: 'Total Scope, Inc.'
-  },
-  address: {
+// Facility routing — same model as ups-label.js
+const FACILITIES = {
+  PA: {
+    name: 'Total Scope, Inc.',
+    contact: 'Receiving Dept (PA)',
+    phone: '8004712255',
     streetLines: ['17 Creek Parkway'],
     city: 'Upper Chichester',
-    stateOrProvinceCode: 'PA',
-    postalCode: '19061',
-    countryCode: 'US'
+    state: 'PA',
+    zip: '19061'
+  },
+  TN: {
+    name: 'Total Scope South',
+    contact: 'Receiving Dept (TN)',
+    phone: '8004712255',
+    // TODO: confirm street address with Joe — placeholder
+    streetLines: ['TBD — Nashville facility'],
+    city: 'Nashville',
+    state: 'TN',
+    zip: '37210'
   }
 };
+function getFacility(p) {
+  const f = String(p.facility || 'PA').toUpperCase();
+  return FACILITIES[f] || FACILITIES.PA;
+}
+function tsiRecipient(fac) {
+  return {
+    contact: {
+      personName: fac.contact,
+      phoneNumber: fac.phone,
+      companyName: fac.name
+    },
+    address: {
+      streetLines: fac.streetLines,
+      city: fac.city,
+      stateOrProvinceCode: fac.state,
+      postalCode: fac.zip,
+      countryCode: 'US'
+    }
+  };
+}
 
 function buildPayload(p, picked) {
   const svc = picked || FALLBACK_SERVICE;
+  const fac = getFacility(p);
+  const TSI_RECIPIENT = tsiRecipient(fac);
   const phoneDigits = (p.phone || '').replace(/[^\d]/g, '');
   const streetLines = [p.address1, p.address2].filter(Boolean);
   const today = (new Date()).toISOString().slice(0, 10);
@@ -243,6 +273,7 @@ router.post('/generate', async (req, res) => {
       success: true,
       env: ENV,
       carrier: 'FedEx',
+      facility: getFacility(p).state,
       tracking: piece.trackingNumber || tx.masterTrackingNumber || null,
       labelFormat: labelDoc.contentType || 'PDF',
       labelBase64: labelDoc.encodedLabel || null,

@@ -36,7 +36,39 @@ const FALLBACK_SERVICE = SERVICE_RANK[1];   // Saver — works coast-to-coast
 
 const CLIENT_ID     = process.env.UPS_CLIENT_ID     || '';
 const CLIENT_SECRET = process.env.UPS_CLIENT_SECRET || '';
-const ACCOUNT       = process.env.UPS_ACCOUNT_NUMBER || '';
+const ACCOUNT_PA    = process.env.UPS_ACCOUNT_NUMBER     || '';      // North / Upper Chichester
+const ACCOUNT_TN    = process.env.UPS_ACCOUNT_NUMBER_TSS || '9Y406Y'; // South / Nashville (from legacy Portal2 web.config)
+
+// ── Facility routing ─────────────────────────────────────
+// Customer's department determines which TSI facility receives
+// the return: PA (North/Upper Chichester) or TN (Nashville/TSS).
+const FACILITIES = {
+  PA: {
+    name: 'Total Scope Inc',
+    attentionName: 'Receiving Dept (PA)',
+    account: ACCOUNT_PA,
+    phone: '8004712255',
+    addressLine: '17 Creek Pkwy',
+    city: 'Upper Chichester',
+    state: 'PA',
+    zip: '19061'
+  },
+  TN: {
+    name: 'Total Scope South',
+    attentionName: 'Receiving Dept (TN)',
+    account: ACCOUNT_TN,
+    // TODO: confirm street address with Joe — placeholder ZIP
+    phone: '8004712255',
+    addressLine: 'TBD — Nashville facility',
+    city: 'Nashville',
+    state: 'TN',
+    zip: '37210'
+  }
+};
+function getFacility(p) {
+  const f = String(p.facility || 'PA').toUpperCase();
+  return FACILITIES[f] || FACILITIES.PA;
+}
 
 let _token = null;
 let _tokenExpiresAt = 0;
@@ -68,15 +100,16 @@ async function getToken() {
 // Returns { code, name, level, deliveryDate } or null on lookup failure.
 async function pickService(token, p) {
   const today = new Date().toISOString().slice(0, 10);
+  const fac = getFacility(p);
   const body = {
     originCountryCode: 'US',
     originStateProvince: (p.state || '').slice(0, 2),
     originCityName: (p.city || '').slice(0, 30),
     originPostalCode: (p.zip || '').slice(0, 5),
     destinationCountryCode: 'US',
-    destinationStateProvince: 'PA',
-    destinationCityName: 'Upper Chichester',
-    destinationPostalCode: '19061',
+    destinationStateProvince: fac.state,
+    destinationCityName: fac.city,
+    destinationPostalCode: fac.zip,
     weight: String(p.weightLbs || 10),
     weightUnitOfMeasure: 'LBS',
     shipmentContentsValue: '100',
@@ -118,24 +151,28 @@ async function pickService(token, p) {
   }
 }
 
-// TSI's address — receiver of all return labels
-const TSI_ADDRESS = {
-  Name: 'Total Scope Inc',
-  AttentionName: 'Receiving Dept',
-  ShipperNumber: ACCOUNT,
-  Phone: { Number: '8004712255' },
-  Address: {
-    AddressLine: '17 Creek Pkwy',
-    City: 'Upper Chichester',
-    StateProvinceCode: 'PA',
-    PostalCode: '19061',
-    CountryCode: 'US'
-  }
-};
+// Build TSI address block from facility selection
+function tsiAddressBlock(fac) {
+  return {
+    Name: fac.name,
+    AttentionName: fac.attentionName,
+    ShipperNumber: fac.account,
+    Phone: { Number: fac.phone },
+    Address: {
+      AddressLine: fac.addressLine,
+      City: fac.city,
+      StateProvinceCode: fac.state,
+      PostalCode: fac.zip,
+      CountryCode: 'US'
+    }
+  };
+}
 
 // ── Build UPS Shipment Request payload ─────────────────
 function buildPayload(p, picked) {
   const svc = picked || FALLBACK_SERVICE;
+  const fac = getFacility(p);
+  const TSI_ADDRESS = tsiAddressBlock(fac);
   // Customer info — they're the "ShipFrom" (where pickup happens) on a return
   const phoneDigits = (p.phone || '').replace(/[^\d]/g, '');
   // UPS limits: Name 35, but probed 27 char limit on Pickup CompanyName.
@@ -170,7 +207,7 @@ function buildPayload(p, picked) {
         PaymentInformation: {
           ShipmentCharge: {
             Type: '01',
-            BillShipper: { AccountNumber: ACCOUNT }
+            BillShipper: { AccountNumber: fac.account }
           }
         },
         Service: { Code: svc.code, Description: svc.name },
@@ -239,8 +276,9 @@ router.post('/generate', async (req, res) => {
       success: true,
       env: ENV,
       carrier: 'UPS',
+      facility: getFacility(p).state,                        // "PA" or "TN"
       tracking: first.TrackingNumber || results.ShipmentIdentificationNumber || null,
-      labelFormat: (label.ImageFormat || {}).Code || null,   // "GIF"
+      labelFormat: (label.ImageFormat || {}).Code || null,
       labelBase64: label.GraphicImage || null,
       labelHtmlBase64: label.HTMLImage || null,
       service: picked || { ...FALLBACK_SERVICE, deliveryDate: null, deliveryDayOfWeek: null, fallback: true },
@@ -258,7 +296,9 @@ router.get('/health', async (req, res) => {
     shipVersion: SHIP_VER,
     hasClientId: !!CLIENT_ID,
     hasClientSecret: !!CLIENT_SECRET,
-    hasAccount: !!ACCOUNT
+    hasAccountPA: !!ACCOUNT_PA,
+    hasAccountTN: !!ACCOUNT_TN,
+    facilities: Object.keys(FACILITIES)
   });
 });
 

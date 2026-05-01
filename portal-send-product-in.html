@@ -342,6 +342,14 @@
           <label>Purchase Order #:</label>
           <input id="po" value="" />
         </div>
+        <div class="rrf-row">
+          <label>Send To:</label>
+          <select id="facility" style="font-size:12px; padding:4px 8px; height:30px; border:1px solid #ced4da; border-radius:4px; width:100%;">
+            <option value="PA" selected>Upper Chichester (North / PA)</option>
+            <option value="TN">Nashville (South / TN)</option>
+          </select>
+          <label></label><span></span>
+        </div>
 
         <!-- ── QUESTIONS ─────────────────────────────────────── -->
         <div class="rrf-questions">
@@ -473,6 +481,7 @@ async function submitRequest() {
 
   // Common payload — both label and pickup routes accept the same shape
   const payload = {
+    facility: $('facility').value,                    // 'PA' or 'TN' — picks TSI receiving dock
     companyName: $('hospital').value,
     contactName: $('contactName').value,
     phone: $('phone').value,
