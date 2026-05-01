@@ -63,71 +63,162 @@ async function getToken() {
   return _token;
 }
 
-// ── Pick fastest+cheapest service via Rate Quotes API ──
+// ── Pick fastest+cheapest service ──
+//
+// Strategy:
+//   1. Call FedEx Rate Quotes for the rate of each service.
+//   2. Use UPS Time-in-Transit as the oracle for "does Ground deliver next biz
+//      day from this origin?" — UPS Ground 1-day zones and FedEx Ground 1-day
+//      zones are nearly identical (same road network, same regional delivery
+//      economics). FedEx sandbox doesn't return commit dates on Rate, but UPS
+//      sandbox does on Time-in-Transit, so we get usable delivery info either
+//      way without needing FedEx Transit Times API subscription.
+//   3. If UPS says Ground is 1-day eligible, prefer FEDEX_GROUND. Otherwise
+//      pick STANDARD_OVERNIGHT.
 async function pickService(token, p) {
   const today = new Date().toISOString().slice(0, 10);
   const fac = getFacility(p);
-  const body = {
-    accountNumber: { value: ACCOUNT },
-    requestedShipment: {
-      shipper: { address: { postalCode: (p.zip || '').slice(0, 5), countryCode: 'US' } },
-      recipient: { address: { postalCode: fac.zip, countryCode: 'US' } },
-      shipDateStamp: today,
-      pickupType: 'USE_SCHEDULED_PICKUP',
-      rateRequestType: ['LIST'],
-      requestedPackageLineItems: [{ weight: { units: 'LB', value: Number(p.weightLbs) || 10 } }]
-    }
-  };
+
+  // ── Step 1: get FedEx rates for each service ──
+  let rateMap = {};
   try {
-    const res = await fetch(`${HOST}/rate/v1/rates/quotes`, {
+    const rateRes = await fetch(`${HOST}/rate/v1/rates/quotes`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
         'X-locale': 'en_US'
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify({
+        accountNumber: { value: ACCOUNT },
+        requestedShipment: {
+          shipper: { address: { postalCode: (p.zip || '').slice(0, 5), countryCode: 'US' } },
+          recipient: { address: { postalCode: fac.zip, countryCode: 'US' } },
+          shipDateStamp: today,
+          pickupType: 'USE_SCHEDULED_PICKUP',
+          rateRequestType: ['LIST'],
+          requestedPackageLineItems: [{ weight: { units: 'LB', value: Number(p.weightLbs) || 10 } }]
+        }
+      })
     });
-    if (!res.ok) return null;
-    const j = await res.json();
-    const details = ((j.output || {}).rateReplyDetails) || [];
-    // Filter: commit.dateDetail.day is in M-F (FedEx returns three-letter weekday)
-    // and commitTimestamp / dateDetail represents next biz day delivery.
-    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
-    while (!BUSINESS_DAYS.includes(['SUN','MON','TUE','WED','THU','FRI','SAT'][tomorrow.getDay()])) {
-      tomorrow.setDate(tomorrow.getDate() + 1);
-    }
-    const targetDate = tomorrow.toISOString().slice(0, 10);   // YYYY-MM-DD
-
-    const eligible = details.filter(d => {
-      const cd = d.commit || {};
-      // Commit can express delivery via commitTimestamp (ISO) or dateDetail.day
-      if (cd.commitTimestamp) {
-        const dd = cd.commitTimestamp.slice(0, 10);
-        return dd === targetDate;
-      }
-      const day = (cd.dateDetail || {}).day;
-      return day && BUSINESS_DAYS.includes(day.toUpperCase().slice(0, 3));
-    });
-
-    // Pick by SERVICE_RANK preference, lowest cost first within preference
-    for (const pref of SERVICE_RANK) {
-      const hits = eligible.filter(d => d.serviceType === pref.type);
-      if (hits.length) {
-        const cheapest = hits.sort((a, b) => {
-          const ca = Number((a.ratedShipmentDetails || [{}])[0].totalNetCharge || 999999);
-          const cb = Number((b.ratedShipmentDetails || [{}])[0].totalNetCharge || 999999);
-          return ca - cb;
-        })[0];
-        const charge = Number((cheapest.ratedShipmentDetails || [{}])[0].totalNetCharge || 0);
-        const cd = cheapest.commit || {};
-        return { ...pref, charge, deliveryDate: (cd.commitTimestamp || '').slice(0, 10) || targetDate };
+    if (rateRes.ok) {
+      const rj = await rateRes.json();
+      for (const d of (rj.output || {}).rateReplyDetails || []) {
+        const charge = Number((d.ratedShipmentDetails || [{}])[0].totalNetCharge || 0);
+        rateMap[d.serviceType] = charge;
       }
     }
-    return null;
-  } catch {
-    return null;
+  } catch { /* fall through to oracle */ }
+
+  // ── Step 2: oracle — is FedEx Ground 1-day eligible from this origin? ──
+  // We delegate to UPS's Time-in-Transit (always sandbox-truthful, free, already
+  // wired). If UPS Ground is 1-day eligible, FedEx Ground is too with high
+  // confidence (same physical road network).
+  const groundIsNextDay = await isGroundOneDayViaUps(p, fac);
+
+  // ── Step 3: pick by preference ──
+  const tomorrow = nextBusinessDay();
+  if (groundIsNextDay) {
+    // Pick the appropriate Ground variant — prefer commercial Ground.
+    const groundType = p.residential ? 'GROUND_HOME_DELIVERY' : 'FEDEX_GROUND';
+    const charge = rateMap[groundType] || rateMap['FEDEX_GROUND'] || null;
+    return {
+      type: groundType,
+      name: groundType === 'GROUND_HOME_DELIVERY' ? 'FedEx Home Delivery' : 'FedEx Ground',
+      charge,
+      deliveryDate: tomorrow
+    };
   }
+  return {
+    type: 'STANDARD_OVERNIGHT',
+    name: 'FedEx Standard Overnight',
+    charge: rateMap['STANDARD_OVERNIGHT'] || null,
+    deliveryDate: tomorrow
+  };
+}
+
+// Returns YYYY-MM-DD string for next business day (M-F)
+function nextBusinessDay() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  while (![1, 2, 3, 4, 5].includes(d.getDay())) d.setDate(d.getDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
+// UPS Time-in-Transit oracle: ask UPS if Ground delivers next biz day from
+// this origin to TSI's facility ZIP. Falls back to false (= use Overnight)
+// on any error so we never fail the whole label flow because of the oracle.
+const UPS_OAUTH = {
+  host: (process.env.UPS_ENV || 'CIE').toUpperCase() === 'PRODUCTION'
+    ? 'https://onlinetools.ups.com'
+    : 'https://wwwcie.ups.com',
+  clientId: process.env.UPS_CLIENT_ID || '',
+  clientSecret: process.env.UPS_CLIENT_SECRET || ''
+};
+let _upsOracleToken = null;
+let _upsOracleTokenExpiresAt = 0;
+
+async function getUpsOracleToken() {
+  if (!UPS_OAUTH.clientId || !UPS_OAUTH.clientSecret) return null;
+  if (_upsOracleToken && Date.now() < _upsOracleTokenExpiresAt - 60_000) return _upsOracleToken;
+  const basic = Buffer.from(`${UPS_OAUTH.clientId}:${UPS_OAUTH.clientSecret}`).toString('base64');
+  try {
+    const r = await fetch(`${UPS_OAUTH.host}/security/v1/oauth/token`, {
+      method: 'POST',
+      headers: { 'Authorization': `Basic ${basic}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'grant_type=client_credentials'
+    });
+    if (!r.ok) return null;
+    const j = await r.json();
+    _upsOracleToken = j.access_token;
+    _upsOracleTokenExpiresAt = Date.now() + (parseInt(j.expires_in || '14400', 10) * 1000);
+    return _upsOracleToken;
+  } catch { return null; }
+}
+
+async function isGroundOneDayViaUps(p, fac) {
+  const token = await getUpsOracleToken();
+  if (!token) return false;
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const r = await fetch(`${UPS_OAUTH.host}/api/shipments/v1/transittimes`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'transId': 'fedex-oracle-' + Date.now(),
+        'transactionSrc': 'TSIPortal'
+      },
+      body: JSON.stringify({
+        originCountryCode: 'US',
+        originStateProvince: (p.state || '').slice(0, 2),
+        originCityName: (p.city || '').slice(0, 30),
+        originPostalCode: (p.zip || '').slice(0, 5),
+        destinationCountryCode: 'US',
+        destinationStateProvince: fac.state,
+        destinationCityName: fac.city,
+        destinationPostalCode: fac.zip,
+        weight: String(p.weightLbs || 10),
+        weightUnitOfMeasure: 'LBS',
+        shipmentContentsValue: '100',
+        shipmentContentsCurrencyCode: 'USD',
+        billType: '03',
+        shipDate: today,
+        shipTime: '14:00',
+        residentialIndicator: p.residential ? '01' : '02',
+        avvFlag: true,
+        numberOfPackages: '1'
+      })
+    });
+    if (!r.ok) return false;
+    const j = await r.json();
+    const services = (j.emsResponse || {}).services || [];
+    return services.some(s =>
+      s.serviceLevel === 'GND' &&
+      Number(s.businessTransitDays) === 1 &&
+      BUSINESS_DAYS.includes(s.deliveryDayOfWeek)
+    );
+  } catch { return false; }
 }
 
 // Facility routing — same model as ups-label.js
