@@ -84,7 +84,7 @@ async function getToken() {
     headers: {
       'Authorization': `Basic ${basic}`,
       'Content-Type': 'application/x-www-form-urlencoded',
-      'x-merchant-id': ACCOUNT
+      'x-merchant-id': ACCOUNT_PA
     },
     body: 'grant_type=client_credentials'
   });
