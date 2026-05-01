@@ -201,6 +201,11 @@ function buildPayload(p, picked) {
     }
   };
 
+  // Shipper of record on the label: customer's name + address, but ShipperNumber
+  // is TSI's account (UPS requires a valid ShipperNumber on every shipment, and
+  // customer doesn't have one — TSI's account authorizes the shipment + pays).
+  const shipperOfRecord = { ...customer, ShipperNumber: fac.account };
+
   return {
     ShipmentRequest: {
       Request: {
@@ -209,24 +214,18 @@ function buildPayload(p, picked) {
       },
       Shipment: {
         Description: (p.description || 'TSI Repair RMA').slice(0, 35),
-        // Customer = Shipper of record. TSI = recipient. TSI pays via
-        // third-party billing (Type 02). No ReturnService block — that's
-        // a billing-report flag whose inline-print Code 9 is Ground-only.
-        // Third-party billing lets the dynamic picker freely choose Ground
-        // (next-day in-zone) or Saver air (next-day far-zone).
-        Shipper: customer,              // customer is shipper of record
+        // Customer's address is the "From" on the label; TSI's account
+        // (ShipperNumber on the Shipper block, also AccountNumber under
+        // BillShipper) authorizes the shipment + gets billed. No
+        // ReturnService block — its inline-print Code 9 is Ground-only,
+        // and we want the dynamic picker to choose Ground OR Saver freely.
+        Shipper: shipperOfRecord,       // customer info + TSI's ShipperNumber
         ShipFrom: customer,             // pickup happens at customer's address
         ShipTo:   TSI_ADDRESS,          // TSI receives
         PaymentInformation: {
           ShipmentCharge: {
-            Type: '02',                 // Bill Third Party
-            BillThirdParty: {
-              AccountNumber: fac.account,
-              Address: {
-                PostalCode: TSI_ADDRESS.Address.PostalCode,
-                CountryCode: 'US'
-              }
-            }
+            Type: '01',                 // Bill Shipper (TSI's account)
+            BillShipper: { AccountNumber: fac.account }
           }
         },
         Service: { Code: svc.code, Description: svc.name },
