@@ -2,7 +2,9 @@
 
 Single-repo proof-of-concept for two pieces of the BrightLogix-built TSI portal, with **live carrier API integration** (UPS + FedEx) running against real sandboxes.
 
-> **For Steve**: this is the runnable counterpart to [`Claude/docs/CARRIERS-INTEGRATION.md`](https://github.com/BrightLogix/TSI-Winscope-Net---Production/blob/joe/carriers-plan/Claude/docs/CARRIERS-INTEGRATION.md) on the cloud repo's `joe/carriers-plan` branch. Every integration described in that design doc is **already working end-to-end here**, against UPS CIE / FedEx Sandbox, with real PRNs and tracking numbers coming back. The cloud-side C# port is on PR #14 (`joe/carriers-foundation`).
+> **Note**: everything in this repo represents **update requests to the client portal that have been stress-tested locally** end-to-end against UPS CIE / FedEx Sandbox. Real PRNs and tracking numbers come back. Not theoretical — every payload, every error case, every API quirk has been validated here before being proposed for the cloud.
+
+> **For Steve**: this is the runnable counterpart to [`Claude/docs/CARRIERS-INTEGRATION.md`](https://github.com/BrightLogix/TSI-Winscope-Net---Production/blob/joe/carriers-plan/Claude/docs/CARRIERS-INTEGRATION.md) on the cloud repo's `joe/carriers-plan` branch. Every integration described in that design doc is **already working end-to-end here**. The cloud-side C# port is on PR #14 (`joe/carriers-foundation`).
 
 ---
 
