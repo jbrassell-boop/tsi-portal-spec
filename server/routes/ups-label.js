@@ -20,6 +20,20 @@ const HOST = ENV === 'PRODUCTION'
 
 const SHIP_VER = process.env.UPS_SHIP_VERSION || 'v2403';
 
+// TSI receives M-F only (Joe confirmed: no Saturday processing)
+const BUSINESS_DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI'];
+
+// Service preference, cheapest → most expensive (next-business-day options).
+// serviceLevel from TransitTimes API → numeric Service.Code in Ship API.
+// Ground is cheapest (~$10) but only works for short-haul routes.
+const SERVICE_RANK = [
+  { level: 'GND', code: '03', name: 'UPS Ground' },
+  { level: '1DP', code: '13', name: 'UPS Next Day Air Saver' },
+  { level: '1DA', code: '01', name: 'UPS Next Day Air' },
+  { level: '1DM', code: '14', name: 'UPS Next Day Air Early' }
+];
+const FALLBACK_SERVICE = SERVICE_RANK[1];   // Saver — works coast-to-coast
+
 const CLIENT_ID     = process.env.UPS_CLIENT_ID     || '';
 const CLIENT_SECRET = process.env.UPS_CLIENT_SECRET || '';
 const ACCOUNT       = process.env.UPS_ACCOUNT_NUMBER || '';
@@ -50,6 +64,60 @@ async function getToken() {
   return _token;
 }
 
+// ── Pick fastest+cheapest service via Time-in-Transit ──
+// Returns { code, name, level, deliveryDate } or null on lookup failure.
+async function pickService(token, p) {
+  const today = new Date().toISOString().slice(0, 10);
+  const body = {
+    originCountryCode: 'US',
+    originStateProvince: (p.state || '').slice(0, 2),
+    originCityName: (p.city || '').slice(0, 30),
+    originPostalCode: (p.zip || '').slice(0, 5),
+    destinationCountryCode: 'US',
+    destinationStateProvince: 'PA',
+    destinationCityName: 'Upper Chichester',
+    destinationPostalCode: '19061',
+    weight: String(p.weightLbs || 10),
+    weightUnitOfMeasure: 'LBS',
+    shipmentContentsValue: '100',
+    shipmentContentsCurrencyCode: 'USD',
+    billType: '03',
+    shipDate: today,
+    shipTime: '14:00',
+    residentialIndicator: p.residential ? '01' : '02',
+    avvFlag: true,
+    numberOfPackages: '1'
+  };
+  try {
+    const res = await fetch(`${HOST}/api/shipments/v1/transittimes`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'transId': 'tit-' + Date.now(),
+        'transactionSrc': 'TSIPortal'
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) return null;
+    const j = await res.json();
+    const services = (j.emsResponse || {}).services || [];
+    // Filter: delivers in 1 business day AND on a business day (M-F only)
+    const eligible = services.filter(s =>
+      Number(s.businessTransitDays) === 1 &&
+      BUSINESS_DAYS.includes(s.deliveryDayOfWeek)
+    );
+    // Pick by SERVICE_RANK preference (cheapest first)
+    for (const pref of SERVICE_RANK) {
+      const hit = eligible.find(s => s.serviceLevel === pref.level);
+      if (hit) return { ...pref, deliveryDate: hit.deliveryDate, deliveryDayOfWeek: hit.deliveryDayOfWeek };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 // TSI's address — receiver of all return labels
 const TSI_ADDRESS = {
   Name: 'Total Scope Inc',
@@ -66,7 +134,8 @@ const TSI_ADDRESS = {
 };
 
 // ── Build UPS Shipment Request payload ─────────────────
-function buildPayload(p) {
+function buildPayload(p, picked) {
+  const svc = picked || FALLBACK_SERVICE;
   // Customer info — they're the "ShipFrom" (where pickup happens) on a return
   const phoneDigits = (p.phone || '').replace(/[^\d]/g, '');
   // UPS limits: Name 35, but probed 27 char limit on Pickup CompanyName.
@@ -104,7 +173,7 @@ function buildPayload(p) {
             BillShipper: { AccountNumber: ACCOUNT }
           }
         },
-        Service: { Code: '03', Description: 'UPS Ground' },
+        Service: { Code: svc.code, Description: svc.name },
         Package: [{
           Description: (p.description || 'Endoscope').slice(0, 35),
           Packaging: { Code: '02', Description: 'Customer Supplied Package' },
@@ -133,7 +202,8 @@ router.post('/generate', async (req, res) => {
 
   try {
     const token = await getToken();
-    const payload = buildPayload(p);
+    const picked = await pickService(token, p);
+    const payload = buildPayload(p, picked);
 
     const upsRes = await fetch(`${HOST}/api/shipments/${SHIP_VER}/ship`, {
       method: 'POST',
@@ -173,6 +243,7 @@ router.post('/generate', async (req, res) => {
       labelFormat: (label.ImageFormat || {}).Code || null,   // "GIF"
       labelBase64: label.GraphicImage || null,
       labelHtmlBase64: label.HTMLImage || null,
+      service: picked || { ...FALLBACK_SERVICE, deliveryDate: null, deliveryDayOfWeek: null, fallback: true },
       ups: { transactionId: (r.Response || {}).TransactionReference }
     });
   } catch (err) {
